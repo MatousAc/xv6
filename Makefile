@@ -192,6 +192,7 @@ UPROGS=\
 	$U/_greet\
 	$U/_cp\
 	$U/_mv\
+	$U/_motd\
 	$U/_shutdown
 
 

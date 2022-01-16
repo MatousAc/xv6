@@ -5,6 +5,12 @@ user/_rm:     file format elf32-i386
 Disassembly of section .text:
 
 00000000 <main>:
+#include "kernel/stat.h"
+#include "user/user.h"
+
+int
+main(int argc, char *argv[])
+{
    0:	8d 4c 24 04          	lea    0x4(%esp),%ecx
    4:	83 e4 f0             	and    $0xfffffff0,%esp
    7:	ff 71 fc             	pushl  -0x4(%ecx)
@@ -19,33 +25,53 @@ Disassembly of section .text:
   19:	8b 31                	mov    (%ecx),%esi
   1b:	8b 59 04             	mov    0x4(%ecx),%ebx
   1e:	83 c3 04             	add    $0x4,%ebx
+  int i;
+
+  if(argc < 2){
   21:	83 fe 01             	cmp    $0x1,%esi
   24:	7e 3e                	jle    64 <main+0x64>
   26:	8d 76 00             	lea    0x0(%esi),%esi
   29:	8d bc 27 00 00 00 00 	lea    0x0(%edi,%eiz,1),%edi
+    fprintf(2, "Usage: rm files...\n");
+    exit();
+  }
+
+  for(i = 1; i < argc; i++){
+    if(unlink(argv[i]) < 0){
   30:	83 ec 0c             	sub    $0xc,%esp
   33:	ff 33                	pushl  (%ebx)
   35:	e8 e8 02 00 00       	call   322 <unlink>
   3a:	83 c4 10             	add    $0x10,%esp
   3d:	85 c0                	test   %eax,%eax
   3f:	78 0f                	js     50 <main+0x50>
+  for(i = 1; i < argc; i++){
   41:	83 c7 01             	add    $0x1,%edi
   44:	83 c3 04             	add    $0x4,%ebx
   47:	39 fe                	cmp    %edi,%esi
   49:	75 e5                	jne    30 <main+0x30>
+      fprintf(2, "rm: %s failed to delete\n", argv[i]);
+      break;
+    }
+  }
+
+  exit();
   4b:	e8 82 02 00 00       	call   2d2 <exit>
+      fprintf(2, "rm: %s failed to delete\n", argv[i]);
   50:	50                   	push   %eax
   51:	ff 33                	pushl  (%ebx)
   53:	68 1c 08 00 00       	push   $0x81c
   58:	6a 02                	push   $0x2
   5a:	e8 e1 05 00 00       	call   640 <fprintf>
+      break;
   5f:	83 c4 10             	add    $0x10,%esp
   62:	eb e7                	jmp    4b <main+0x4b>
+    fprintf(2, "Usage: rm files...\n");
   64:	52                   	push   %edx
   65:	52                   	push   %edx
   66:	68 08 08 00 00       	push   $0x808
   6b:	6a 02                	push   $0x2
   6d:	e8 ce 05 00 00       	call   640 <fprintf>
+    exit();
   72:	e8 5b 02 00 00       	call   2d2 <exit>
   77:	66 90                	xchg   %ax,%ax
   79:	66 90                	xchg   %ax,%ax
