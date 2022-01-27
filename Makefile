@@ -193,6 +193,8 @@ UPROGS=\
 	$U/_cp\
 	$U/_mv\
 	$U/_motd\
+	$U/_iotest\
+	$U/_xvEdit\
 	$U/_shutdown
 
 
