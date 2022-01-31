@@ -195,6 +195,7 @@ UPROGS=\
 	$U/_motd\
 	$U/_iotest\
 	$U/_xvEdit\
+	$U/_tryfork\
 	$U/_shutdown
 
 
