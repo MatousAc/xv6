@@ -1,20 +1,28 @@
 #include "kernel/types.h"
 #include "kernel/fcntl.h"
 #include "user/user.h"
-#define MAXFILESIZE 71680;
+#include "LinkedList.c"
+#define MAXFILESIZE 71680
+#define MAXLINESIZE 1000
 
-enum { END, ADD, DROP, EDIT, LIST, QUIT, BI };
-struct File {
+enum { END, ADD, DROP, EDIT, LIST, SHOW, QUIT, BI };
+typedef struct File {
   char* filename;
   int fd;
-};
+  struct LinkedList* lines;
+} File;
 
-
+int getLine(int fileptr, char line[]);
+void getArg(char* dest, char* args, char delimiter);
+int find(char* str, char c);
+Node* lineAt(struct LinkedList* list, int pos);
+void gatherLines(File file);
 void end(struct File file, char* args);
 void add(struct File file, char* args);
 void drop(struct File file, char* args);
 void edit(struct File file, char* args);
 void list(struct File file, char* args);
+void show(struct File file, char* args);
 void quit(struct File file, char* args);
 void bi();
 void substr(char* dest, char* str, int start, int end);
@@ -26,24 +34,38 @@ int main(int argc, char* argv[]) {
   // arg czeching
   if (argc < 2) {
     fprintf(2, "specify a file you want to edit");
-    return 0;
+    exit();
   } else if (argc > 2) {
     fprintf(2, "only specify one file");
-    return 0;
+    exit();
   }
   static char buf[100] = "";
   char cmdstr[100] = "";
   char args[100] = "";
   int nbuf = sizeof(buf);
   int cmd = END;
-  // object we will pass around
+  // file/stats object we will pass around
+  struct stat {
+    short type;
+    int dev;
+    uint ino;
+    short nlink;
+    uint size;
+  };
   struct File file;
   file.filename = argv[1];
+  file.lines = MakeLinkedList();
   fprintf(2, "Welcome to xvEdit!\n");
-  // fprintf(2, "You get to edit %s\n", file.filename);
-
-  // printf("This should go to the screen.\n");
-  file.fd = open(file.filename, O_CREATE | O_WRONLY);
+  // opening
+  file.fd = open(file.filename, O_RDONLY);
+  if (file.fd == -1) {
+    fprintf(2, "creating %s . . .\n",  file.filename);
+    file.fd = open(file.filename, O_CREATE | O_WRONLY);
+    close(file.fd);
+  } else { // populate Linked List
+    gatherLines(file);
+  }
+  close(file.fd);
 
   while (cmd != QUIT) {
     fprintf(2, "xvEdit> ");
@@ -63,6 +85,7 @@ int main(int argc, char* argv[]) {
     else if (strcmp(cmdstr, "DROP") == 0) {cmd = DROP;}
     else if (strcmp(cmdstr, "EDIT") == 0) {cmd = EDIT;}
     else if (strcmp(cmdstr, "LIST") == 0) {cmd = LIST;}
+    else if (strcmp(cmdstr, "SHOW") == 0) {cmd = SHOW;}
     else if (strcmp(cmdstr, "QUIT") == 0) {cmd = QUIT;}
     else {cmd = BI;}
     switch (cmd) {
@@ -81,6 +104,9 @@ int main(int argc, char* argv[]) {
     case LIST:
       list(file, args);
       break;
+    case SHOW:
+      show(file, args);
+      break;
     case QUIT:
       break;
     case BI:
@@ -91,38 +117,85 @@ int main(int argc, char* argv[]) {
     }
   }
   close(file.fd);
+  destroyLinkedList(file.lines);
   exit();
   return 0;
 }
 
-
 void end(struct File file, char* args) {
-  
-  write(file.fd, args, strlen(args));
 }
 
 void add(struct File file, char* args) {
-  write(file.fd, args, strlen(args));
 }
 
 void drop(struct File file, char* args) {
-  write(file.fd, args, strlen(args));
 }
 
 void edit(struct File file, char* args) {
-  write(file.fd, args, strlen(args));
 }
 
 void list(struct File file, char* args) {
-  write(file.fd, args, strlen(args));
+  if (strlen(args) < 1) {
+    fprintf(2, "you need to give a range to list");
+  }
+  char* start = "";
+  getArg(start, args, ' ');
+  fprintf(2, "start: %s\nargs: %s\n", start, args);
+}
+
+void show(struct File file, char* args) {
+  struct Node* curr = file.lines->head->next;
+  int lineNum = 1;
+  while (curr != file.lines->tail) {
+    fprintf(2, "%s\n", curr->data);
+    curr = curr->next;
+    lineNum++;
+  }
 }
 
 void quit(struct File file, char* args) {
-  write(file.fd, args, strlen(args));
 }
 
 void bi() {
   fprintf(2, "bad bi input\n");
+}
+
+
+void gatherLines(File file) {
+  char line[MAXLINESIZE];
+  int lines = 0;
+  while (getLine(file.fd, line)) {
+    append(file.lines, line);
+    lines++;
+  }
+  fprintf(2, "%d lines read from %s\n", lines, file.filename);
+}
+
+// grabs a single line from fileptr
+int getLine(int fileptr, char line[]) {
+  int len = strlen(line);
+  memset(line, 0, len);
+  char c[1];
+  int i;
+  for (i = 0; i < MAXLINESIZE - 1; i++) {
+    if (read(fileptr, c, 1) == 0) return strlen(line);
+    if (*c == '\n') break;
+    line[i] = *c;
+  }
+  line[i + 1] = '\0';
+  return 1;
+}
+
+void getArg(char* dest, char* args, char delimiter) {
+  int end = find(args, delimiter);
+  substr(dest, args, 0, end);
+  // substr(args, args, end, (int) strlen(args));
+}
+
+int find(char* str, char c) {
+  char* pos = strchr(str, c);
+  if (*pos == 0) return -1;
+  return pos - str;
 }
 
 void substr(char* dest, char* str, int start, int end) {
@@ -162,4 +235,9 @@ void unline(char* str) {
       break;
   }
   str[len] = '\0';
+}
+
+// syntactic sugar
+Node* lineAt(struct LinkedList* list, int pos) {
+  return nodeAt(list, pos);
 }
