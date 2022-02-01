@@ -48,12 +48,20 @@ LinkedList* MakeLinkedList() {
 }
 
 Node* nodeAt(struct LinkedList* list, int pos) {
+  // for anything past the end:
+  if (pos > list->len)
+    return list->tail->prev;
+  // for anything before the beginning:
+  if ((pos < 0) && ((0 - pos) > list->len))
+    return list->head->next;
+  
   struct Node* curNode;
+  // negative indices
   if (pos < 0) {
     curNode = list->tail;
     while (++pos != 0)
       curNode = curNode->prev;
-  }
+  } // start looking from the back
   else if (pos > (list->len / 2)) {
     int cur = list->len;
     curNode = list->tail;
@@ -61,7 +69,7 @@ Node* nodeAt(struct LinkedList* list, int pos) {
       curNode = curNode->prev;
       cur--;
     }
-  }
+  } // start looking from the front
   else {
     int cur = 0;
     curNode = list->head->next;
@@ -96,6 +104,7 @@ void destroyLinkedList(struct LinkedList* list) {
   while (destroyer != list->tail) {
     destroyer = traveler;
     traveler = traveler->next;
+    free(destroyer->data);
     free(destroyer);
   }
   free(list->head);

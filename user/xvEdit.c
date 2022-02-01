@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
     }
   }
   close(file.fd);
-  destroyLinkedList(file.lines);
+  // destroyLinkedList(file.lines); // FIXME
   exit();
   return 0;
 }
@@ -138,16 +138,26 @@ void edit(struct File file, char* args) {
 
 void list(struct File file, char* args) {
   if (strlen(args) < 1) {
-    fprintf(2, "you need to give a range to list");
+    fprintf(2, "you need to give a range to list\n");
+    return;
   }
 
   int start, end;
-  if (!collectRange(args, &start, &end)) return;
+  if (collectRange(args, &start, &end) == 1) {
+    fprintf(2, "error: start index is larger than end index\n");
+    return;
+  }
   
   struct Node* curNode = (lineAt(file.lines, start))->prev;
-  struct Node* endNode = lineAt(file.lines, end);
-  while (curNode != endNode) {
+  struct Node* stopNode = lineAt(file.lines, end);
+  while (curNode != stopNode) {
     curNode = curNode->next;
+    if (curNode == file.lines->tail) {
+      fprintf(2, "________________________________\n");
+      fprintf(2, "make sure start is less than end\n");
+      fprintf(2, "printed till EOF\n");
+      return;
+    }
     fprintf(2, "%s\n", curNode->data);
   }
 }
@@ -163,6 +173,7 @@ void show(struct File file, char* args) {
 }
 
 void quit(struct File file, char* args) {
+  return;
 }
 
 void bi() {
@@ -210,43 +221,51 @@ int find(char* str, char c) {
 void substr(char* dest, char* str, int start, int end) {
   int len = strlen(str);
   if (end > len) end = len;
-  int s = 0;
-  for (int i = start; i < end; i++)
-    dest[s++] = str[i];
+  int s = 0, i = start;
+  while (i < end)
+    dest[s++] = str[i++];
   dest[s] = '\0';
 }
 
 int collectRange(char* args, int* startptr, int* endptr) {
-  int negStartFlag = 0;
-  int negEndFlag = 0;
-  char* startstr = "";
+  // single number
+  if (find(args, ':') == -1) {
+    if (args[0] == '-') {
+      substr(args, args, 1, strlen(args));
+      *startptr = 0 - atoi(args);
+    } else
+      *startptr = atoi(args);
+    *endptr = *startptr;
+    return 0;
+  }
+
+  int negStartFlag = 0, negEndFlag = 0;
+  char startstr[10];
   getArg(startstr, args, ':');
   char* endstr = args;
-  // fprintf(2, "starts: %s\nends: %s\n", startstr, endstr);
+
+  // handling negative indices
   if (startstr[0] == '-') {
-    // fprintf(2, "negative indices are not allowed for the start");
-    return 0;
+    substr(startstr, startstr, 1, strlen(startstr));
+    negStartFlag = 1;
   }
   if (endstr[0] == '-') {
     substr(endstr, endstr, 1, strlen(endstr));
     negEndFlag = 1;
   }
 
-  // fprintf(2, "starts: %s\nends: %s\n", startstr, endstr);
+  // handling empty indices
   if (strcmp(startstr, "\0") == 0) *startptr = 1;
   else *startptr = atoi(startstr);
   if (strcmp(endstr, "\0") == 0) *endptr = -1;
   else *endptr = atoi(endstr);
-  // fprintf(2, "start: %d\nend: %d\n", *startptr, *endptr);
 
   if (negStartFlag) *startptr = 0 - *startptr;
   if (negEndFlag) *endptr = 0 - *endptr;
-  // fprintf(2, "start: %d\nend: %d\n", *startptr, *endptr);
-  if ((*startptr > *endptr) && (*endptr > 0)) {
-    fprintf(2, "invalid parameters, start index is larger that end index\n");
-    return 0;
-  }
-  return 1;
+  if (((*startptr > 0 && *endptr > 0) || 
+      (*startptr < 0 && *endptr < 0)) && (*startptr > *endptr))
+    return 1;
+  return 0;
 }
 
 void toUpper(char* str) {
@@ -286,10 +305,8 @@ Node* lineAt(struct LinkedList* list, int pos) {
 
 void printl(int lineNum, char* line) {
   if (lineNum < 10)
-    fprintf(2, "%d   | %s\n", lineNum, line);
-  else if (lineNum < 100)
     fprintf(2, "%d  | %s\n", lineNum, line);
-  else if (lineNum < 1000)
+  else if (lineNum < 100)
     fprintf(2, "%d | %s\n", lineNum, line);
   else
     fprintf(2, "%d| %s\n", lineNum, line);
