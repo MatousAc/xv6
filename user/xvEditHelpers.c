@@ -101,8 +101,6 @@ int collectRange(char* args, int* startptr, int* endptr) {
       (*startptr < 0 && *endptr < 0)) && (*startptr > *endptr))
     return 1;
 
-  // if (*startptr == 0) *startptr = 1;
-  // if (*endptr == 0) *endptr = 1;
   return 0;
 }
 
@@ -122,6 +120,14 @@ int normalizeRange(File file, int* sp, int* ep) {
 
 int numLines(int start, int end) {
   return (end - start) + 1;
+}
+
+int negatoi(char* str) {
+  if (str[0] == '-') {
+    substr(str, str, 1, strlen(str));
+    return 0 - atoi(str);
+  }
+  return atoi(str);
 }
 
 void toUpper(char* str) {

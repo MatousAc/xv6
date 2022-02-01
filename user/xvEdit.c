@@ -24,9 +24,9 @@ int main(int argc, char* argv[]) {
     fprintf(2, "only specify one file");
     exit();
   }
-  static char buf[100] = "";
-  char cmdstr[100] = "";
-  char args[100] = "";
+  static char buf[MAXLINESIZE] = "";
+  char cmdstr[MAXLINESIZE] = "";
+  char args[MAXLINESIZE] = "";
   int nbuf = sizeof(buf);
   int cmd = END;
   // objects we will pass around
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
   // opening
   file.fd = open(file.filename, O_RDONLY);
   if (file.fd == -1) {
-    fprintf(2, "creating %s . . .\n",  file.filename);
+    fprintf(2, "creating %s...\n",  file.filename);
     file.fd = open(file.filename, O_CREATE | O_WRONLY);
     close(file.fd);
   } else { // populate Linked List
@@ -110,9 +110,24 @@ int main(int argc, char* argv[]) {
 
 // commands
 void end(struct File* file, char* args) {
+  char* line = args;
+  append(file->lines, line);
+  file->len++;
 }
 
 void add(struct File* file, char* args) {
+  if (strlen(args) < 1) {
+    fprintf(2, "you need to give a line number to insert before\n");
+    return;
+  }
+  char lineStr[10];
+  getArg(lineStr, args, ' ');
+  char* line = args;
+
+  int lineNum = negatoi(lineStr);
+  // 1-based to 0-based insert
+  insert(file->lines, line, lineNum - 1);
+  file->len++;
 }
 
 void drop(struct File* file, char* args) {
@@ -127,7 +142,7 @@ void drop(struct File* file, char* args) {
     return;
   }
   if (normalizeRange(*file, &start, &end) == 1) {
-    fprintf(2, "error: bad input range\n");
+    fprintf(2, "error: bad input range. make sure start < end\n");
     return;
   }
   int numl = numLines(start, end);
@@ -136,18 +151,32 @@ void drop(struct File* file, char* args) {
   if (confirmation() != 0) return;
 
   // drop lines
-  fprintf(2, "dropping...\n");
   struct Node* curNode = (lineAt(file->lines, start))->prev;
   struct Node* stopNode = lineAt(file->lines, end);
   while (curNode != stopNode) {
     curNode = curNode->next;
-    destroyNode(curNode);
+    destroyNode(file->lines, curNode);
     file->len--;
   }
+  if (numl == 1) fprintf(2, "line %d dropped\n", start);
+  else fprintf(2, "%d lines dropped\n", numl);
   return;
 }
 
 void edit(struct File* file, char* args) {
+  if (strlen(args) < 1) {
+    fprintf(2, "you need to give a line number to replace\n");
+    return;
+  }
+  char lineStr[10];
+  getArg(lineStr, args, ' ');
+  char* line = args;
+
+  int lineNum = negatoi(lineStr);
+  // remove
+  destroyNode(file->lines, lineAt(file->lines, lineNum));
+  // 1-based to 0-based insert
+  insert(file->lines, line, lineNum - 1);
 }
 
 void list(struct File file, char* args) {
@@ -161,17 +190,16 @@ void list(struct File file, char* args) {
     fprintf(2, "error: start index is larger than end index\n");
     return;
   }
+  if (normalizeRange(file, &start, &end) == 1) {
+    fprintf(2, "error: bad input range. make sure start < end\n");
+    return;
+  }
   
   struct Node* curNode = (lineAt(file.lines, start))->prev;
   struct Node* stopNode = lineAt(file.lines, end);
   while (curNode != stopNode) {
     curNode = curNode->next;
-    if (curNode == file.lines->tail) {
-      fprintf(2, "________________________________\n");
-      fprintf(2, "make sure start is less than end\n");
-      fprintf(2, "printed till EOF\n");
-      return;
-    }
+    if (curNode == file.lines->tail) return;
     fprintf(2, "%s\n", curNode->data);
   }
 }
@@ -207,11 +235,10 @@ void quit(struct File* file) {
     cur = cur->next;
   }
   close(file->fd);
-  fprintf(2, "changes saved");
+  fprintf(2, "changes saved\n");
   return;
 }
 
 void bi() {
   fprintf(2, "bad bi input\n");
 }
-

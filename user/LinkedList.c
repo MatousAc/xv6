@@ -47,12 +47,13 @@ Node* nodeAt(struct LinkedList* list, int pos) {
   return curNode;
 }
 
-void destroyNode(struct Node* self) {
+void destroyNode(struct LinkedList* list, struct Node* self) {
     self->prev->next = self->next;
     self->next->prev = self->prev;
 
     free(self->data);
     free(self);
+    list->len--;
 }
 
 LinkedList* MakeLinkedList() {

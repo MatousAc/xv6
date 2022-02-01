@@ -18,6 +18,8 @@ int find(char* str, char c);
 Node* lineAt(struct LinkedList* list, int pos);
 void gatherLines(File* file);
 int confirmation();
+
+int negatoi(char* str);
 void toUpper(char* str);
 void toLower(char* str);
 void unline(char* str);
