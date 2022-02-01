@@ -1,15 +1,7 @@
 #include "LinkedList.h"
 #define nullptr 0
 
-void mystrcpy(char* dest, char* src) {
-  while(*src != '\0')
-    *(dest++) = *(src++);
-  *dest = '\0';
-}
-
-char*
-safestrcpy(char *s, const char *t, int n)
-{
+char* safestrcpy(char *s, const char *t, int n) {
   char *os;
 
   os = s;
@@ -24,27 +16,9 @@ safestrcpy(char *s, const char *t, int n)
 Node* nullNode(char* data) {
   struct Node* node = malloc(sizeof(Node));
   node->prev = nullptr;
-  // char* newData = (char*)malloc(sizeof(char) * 1000);
-  // mystrcpy(newData, data);
-  node->data = data;// newData;
-  // strcpy(node->data, data);
+  node->data = data;
   node->next = nullptr;
   return node;
-}
-
-LinkedList* MakeLinkedList() {
-  struct LinkedList* list = malloc(sizeof(LinkedList));
-  Node* head = nullNode(nullptr);
-  Node* tail = nullNode(nullptr);
-  head->prev = nullptr;
-  head->next = tail;
-  tail->prev = head;
-  tail->next = nullptr;
-
-  list->len = 0;
-  list->head = head;
-  list->tail = tail;
-  return list;
 }
 
 Node* nodeAt(struct LinkedList* list, int pos) {
@@ -61,15 +35,7 @@ Node* nodeAt(struct LinkedList* list, int pos) {
     curNode = list->tail;
     while (++pos != 0)
       curNode = curNode->prev;
-  } // start looking from the back
-  else if (pos > (list->len / 2)) {
-    int cur = list->len;
-    curNode = list->tail;
-    while (cur != pos) {
-      curNode = curNode->prev;
-      cur--;
-    }
-  } // start looking from the front
+  } // start looking from front
   else {
     int cur = 0;
     curNode = list->head->next;
@@ -79,6 +45,29 @@ Node* nodeAt(struct LinkedList* list, int pos) {
     }
   }
   return curNode;
+}
+
+void destroyNode(struct Node* self) {
+    self->prev->next = self->next;
+    self->next->prev = self->prev;
+
+    free(self->data);
+    free(self);
+}
+
+LinkedList* MakeLinkedList() {
+  struct LinkedList* list = malloc(sizeof(LinkedList));
+  Node* head = nullNode(nullptr);
+  Node* tail = nullNode(nullptr);
+  head->prev = nullptr;
+  head->next = tail;
+  tail->prev = head;
+  tail->next = nullptr;
+
+  list->len = 0;
+  list->head = head;
+  list->tail = tail;
+  return list;
 }
 
 void insert(struct LinkedList* list, char* data, int pos) {

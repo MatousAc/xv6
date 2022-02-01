@@ -10,23 +10,27 @@ typedef struct File {
   char* filename;
   int fd;
   struct LinkedList* lines;
+  int len;
 } File;
 
-int getLine(int fileptr, char line[]);
-void getArg(char* dest, char* args, char delimiter);
-int find(char* str, char c);
-Node* lineAt(struct LinkedList* list, int pos);
-void gatherLines(File file);
-void end(struct File file, char* args);
-void add(struct File file, char* args);
-void drop(struct File file, char* args);
-void edit(struct File file, char* args);
+void end(struct File* file, char* args);
+void add(struct File* file, char* args);
+void drop(struct File* file, char* args);
+void edit(struct File* file, char* args);
 void list(struct File file, char* args);
 void show(struct File file, char* args);
 void quit(struct File file, char* args);
 void bi();
 void substr(char* dest, char* str, int start, int end);
 int collectRange(char* args, int* startptr, int* endptr);
+int numLines(int start, int end);
+int normalizeRange(File file, int* startptr, int* endptr);
+int getLine(int fileptr, char line[]);
+void getArg(char* dest, char* args, char delimiter);
+int find(char* str, char c);
+Node* lineAt(struct LinkedList* list, int pos);
+void gatherLines(File* file);
+int confirmation();
 void toUpper(char* str);
 void toLower(char* str);
 void unline(char* str);
@@ -46,7 +50,7 @@ int main(int argc, char* argv[]) {
   char args[100] = "";
   int nbuf = sizeof(buf);
   int cmd = END;
-  // file/stats object we will pass around
+  // objects we will pass around
   struct stat {
     short type;
     int dev;
@@ -55,9 +59,11 @@ int main(int argc, char* argv[]) {
     uint size;
   };
   struct File file;
+  file.len = 0;
   file.filename = argv[1];
   file.lines = MakeLinkedList();
   fprintf(2, "Welcome to xvEdit!\n");
+
   // opening
   file.fd = open(file.filename, O_RDONLY);
   if (file.fd == -1) {
@@ -65,10 +71,11 @@ int main(int argc, char* argv[]) {
     file.fd = open(file.filename, O_CREATE | O_WRONLY);
     close(file.fd);
   } else { // populate Linked List
-    gatherLines(file);
+    gatherLines(&file);
   }
   close(file.fd);
 
+  // xvEdit>
   while (cmd != QUIT) {
     fprintf(2, "xvEdit> ");
     memset(buf, 0, nbuf);
@@ -77,10 +84,8 @@ int main(int argc, char* argv[]) {
     unline(buf);
     substr(cmdstr, buf, 0, 4);
     toUpper(cmdstr);
-    // fprintf(2, "cmdstr: %s\n", cmdstr);
-    // fprintf(2, "strlen(cmdstr): %d\n", strlen(cmdstr));
     substr(args, buf, strlen(cmdstr) + 1, strlen(buf));
-    // fprintf(2, "args: %s\n", args);
+    fprintf(2, "args: %s\n", args);
 
     if      (strcmp(cmdstr, "@END") == 0) {cmd = END;}
     else if (strcmp(cmdstr, "ADD<") == 0) {cmd = ADD;}
@@ -92,16 +97,16 @@ int main(int argc, char* argv[]) {
     else {cmd = BI;}
     switch (cmd) {
     case END: 
-      end(file, args);
+      end(&file, args);
       break;
     case ADD: 
-      add(file, args);
+      add(&file, args);
       break;
     case DROP:
-      drop(file, args);
+      drop(&file, args);
       break;
     case EDIT:
-      edit(file, args);
+      edit(&file, args);
       break;
     case LIST:
       list(file, args);
@@ -124,16 +129,47 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
-void end(struct File file, char* args) {
+// commands
+void end(struct File* file, char* args) {
 }
 
-void add(struct File file, char* args) {
+void add(struct File* file, char* args) {
 }
 
-void drop(struct File file, char* args) {
+void drop(struct File* file, char* args) {
+  if (strlen(args) < 1) {
+    fprintf(2, "you need to give a range to drop\n");
+    return;
+  }
+
+  int start, end;
+  if (collectRange(args, &start, &end) == 1) {
+    fprintf(2, "error: start index is larger than end index\n");
+    return;
+  }
+  if (normalizeRange(*file, &start, &end) == 1) {
+    fprintf(2, "error: bad input range\n");
+    return;
+  }
+  int numl = numLines(start, end);
+  if (numl == 1) fprintf(2, "Drop line %d (y/n)? ", start);
+  else fprintf(2, "Drop %d lines [%d:%d] (y/n)? ", numl, start, end);
+  if (confirmation() != 0) return;
+
+  // drop lines
+  fprintf(2, "dropping...\n");
+  struct Node* curNode = (lineAt(file->lines, start))->prev;
+  struct Node* stopNode = lineAt(file->lines, end);
+  while (curNode != stopNode) {
+    curNode = curNode->next;
+    destroyNode(curNode);
+    file->len--;
+  }
+  fprintf(2, "file->len = %d\n", file->len);
+  return;
 }
 
-void edit(struct File file, char* args) {
+void edit(struct File* file, char* args) {
 }
 
 void list(struct File file, char* args) {
@@ -181,14 +217,14 @@ void bi() {
 }
 
 
-void gatherLines(File file) {
+// helper f(x)s
+void gatherLines(File* file) {
   char line[MAXLINESIZE];
-  int lines = 0;
-  while (getLine(file.fd, line)) {
-    append(file.lines, line);
-    lines++;
+  while (getLine(file->fd, line)) {
+    append(file->lines, line);
+    file->len++;
   }
-  fprintf(2, "%d lines read from %s\n", lines, file.filename);
+  fprintf(2, "%d lines read from %s\n", file->len, file->filename);
 }
 
 // grabs a single line from fileptr
@@ -210,6 +246,23 @@ void getArg(char* dest, char* args, char delimiter) {
   int end = find(args, delimiter);
   substr(dest, args, 0, end);
   substr(args, args, end + 1, (int) strlen(args));
+}
+
+// 0 = yes, 1 = no
+int confirmation() {
+  // get response
+  char buf[MAXLINESIZE];
+  int nbuf = sizeof(buf);
+  memset(buf, 0, nbuf);
+  gets(buf, nbuf);
+  // determine output
+  switch (buf[0]) {
+  case 'Y':
+  case 'y':
+    return 0;
+  default:
+    return 1;
+  }
 }
 
 int find(char* str, char c) {
@@ -265,7 +318,28 @@ int collectRange(char* args, int* startptr, int* endptr) {
   if (((*startptr > 0 && *endptr > 0) || 
       (*startptr < 0 && *endptr < 0)) && (*startptr > *endptr))
     return 1;
+
+  // if (*startptr == 0) *startptr = 1;
+  // if (*endptr == 0) *endptr = 1;
   return 0;
+}
+
+int normalizeRange(File file, int* sp, int* ep) {
+  int l = file.len;
+  if (*ep > l) *ep = l;
+  else if (*ep < 1) *ep += l + 1;
+  if (*ep < 1) *ep = 1;
+
+  if (*sp > l) *sp = l;
+  else if (*sp < 1) *sp += l + 1;
+  if (*sp < 1) *sp = 1;
+  if ((*ep - *sp) < 0)
+    return 1;
+  return 0;
+}
+
+int numLines(int start, int end) {
+  return (end - start) + 1;
 }
 
 void toUpper(char* str) {
