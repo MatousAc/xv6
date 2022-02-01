@@ -88,15 +88,12 @@ void prepend(struct LinkedList* list, char* data) { insert(list, data, 0); }
 void append(struct LinkedList* list, char* data) { insert(list, data, list->len); }
 
 void destroyLinkedList(struct LinkedList* list) {
-  struct Node* destroyer = list->head;
-  struct Node* traveler = destroyer->next;
-  while (destroyer != list->tail) {
-    destroyer = traveler;
-    traveler = traveler->next;
-    free(destroyer->data);
-    free(destroyer);
+  struct Node* curNode = list->head;
+  while (curNode != list->tail) {
+    curNode = curNode->next;
+    free(curNode->prev->data);
+    free(curNode->prev);
   }
-  free(list->head);
-  free(list->tail);
+  free(curNode);
   free(list);
 }

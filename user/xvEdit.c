@@ -2,16 +2,9 @@
 #include "kernel/fcntl.h"
 #include "user/user.h"
 #include "LinkedList.c"
-#define MAXFILESIZE 71680
-#define MAXLINESIZE 1000
+#include "xvEditHelpers.c"
 
 enum { END, ADD, DROP, EDIT, LIST, SHOW, QUIT, BI };
-typedef struct File {
-  char* filename;
-  int fd;
-  struct LinkedList* lines;
-  int len;
-} File;
 
 void end(struct File* file, char* args);
 void add(struct File* file, char* args);
@@ -19,22 +12,8 @@ void drop(struct File* file, char* args);
 void edit(struct File* file, char* args);
 void list(struct File file, char* args);
 void show(struct File file, char* args);
-void quit(struct File file, char* args);
+void quit(struct File* file);
 void bi();
-void substr(char* dest, char* str, int start, int end);
-int collectRange(char* args, int* startptr, int* endptr);
-int numLines(int start, int end);
-int normalizeRange(File file, int* startptr, int* endptr);
-int getLine(int fileptr, char line[]);
-void getArg(char* dest, char* args, char delimiter);
-int find(char* str, char c);
-Node* lineAt(struct LinkedList* list, int pos);
-void gatherLines(File* file);
-int confirmation();
-void toUpper(char* str);
-void toLower(char* str);
-void unline(char* str);
-void printl(int lineNum, char* line);
 
 int main(int argc, char* argv[]) {
   // arg czeching
@@ -85,7 +64,6 @@ int main(int argc, char* argv[]) {
     substr(cmdstr, buf, 0, 4);
     toUpper(cmdstr);
     substr(args, buf, strlen(cmdstr) + 1, strlen(buf));
-    fprintf(2, "args: %s\n", args);
 
     if      (strcmp(cmdstr, "@END") == 0) {cmd = END;}
     else if (strcmp(cmdstr, "ADD<") == 0) {cmd = ADD;}
@@ -115,6 +93,7 @@ int main(int argc, char* argv[]) {
       show(file, args);
       break;
     case QUIT:
+      quit(&file);
       break;
     case BI:
       bi();
@@ -124,7 +103,7 @@ int main(int argc, char* argv[]) {
     }
   }
   close(file.fd);
-  // destroyLinkedList(file.lines); // FIXME
+  // destroyLinkedList(file.lines);
   exit();
   return 0;
 }
@@ -165,7 +144,6 @@ void drop(struct File* file, char* args) {
     destroyNode(curNode);
     file->len--;
   }
-  fprintf(2, "file->len = %d\n", file->len);
   return;
 }
 
@@ -199,16 +177,37 @@ void list(struct File file, char* args) {
 }
 
 void show(struct File file, char* args) {
-  struct Node* curr = file.lines->head->next;
+  struct Node* cur = file.lines->head->next;
   int lineNum = 1;
-  while (curr != file.lines->tail) {
-    printl(lineNum, curr->data);
-    curr = curr->next;
+  while (cur != file.lines->tail) {
+    printl(lineNum, cur->data);
+    cur = cur->next;
     lineNum++;
   }
 }
 
-void quit(struct File file, char* args) {
+void quit(struct File* file) {
+  fprintf(2, "save changes (y/n)? ");
+  if (confirmation() != 0) return;
+
+  // save contents
+  if (unlink(file->filename) < 0) {
+    fprintf(2, "could not clear file for writing. changes lost\n");
+    return;
+  }
+  file->fd = open(file->filename, O_CREATE|O_RDWR);
+  if (file->fd < 0) {
+    fprintf(2, "could not open file for writing. changes lost\n");
+    return;
+  }
+  struct Node* cur = file->lines->head->next;
+  while (cur != file->lines->tail) {
+    write(file->fd, cur->data, strlen(cur->data));
+    write(file->fd, "\n", sizeof(char));
+    cur = cur->next;
+  }
+  close(file->fd);
+  fprintf(2, "changes saved");
   return;
 }
 
@@ -216,172 +215,3 @@ void bi() {
   fprintf(2, "bad bi input\n");
 }
 
-
-// helper f(x)s
-void gatherLines(File* file) {
-  char line[MAXLINESIZE];
-  while (getLine(file->fd, line)) {
-    append(file->lines, line);
-    file->len++;
-  }
-  fprintf(2, "%d lines read from %s\n", file->len, file->filename);
-}
-
-// grabs a single line from fileptr
-int getLine(int fileptr, char line[]) {
-  int len = strlen(line);
-  memset(line, 0, len);
-  char c[1];
-  int i;
-  for (i = 0; i < MAXLINESIZE - 1; i++) {
-    if (read(fileptr, c, 1) == 0) return strlen(line);
-    if (*c == '\n') break;
-    line[i] = *c;
-  }
-  line[i + 1] = '\0';
-  return 1;
-}
-
-void getArg(char* dest, char* args, char delimiter) {
-  int end = find(args, delimiter);
-  substr(dest, args, 0, end);
-  substr(args, args, end + 1, (int) strlen(args));
-}
-
-// 0 = yes, 1 = no
-int confirmation() {
-  // get response
-  char buf[MAXLINESIZE];
-  int nbuf = sizeof(buf);
-  memset(buf, 0, nbuf);
-  gets(buf, nbuf);
-  // determine output
-  switch (buf[0]) {
-  case 'Y':
-  case 'y':
-    return 0;
-  default:
-    return 1;
-  }
-}
-
-int find(char* str, char c) {
-  for (int i = 0; i < strlen(str); i++)
-    if (str[i] == c) return i;
-  return -1;
-}
-
-void substr(char* dest, char* str, int start, int end) {
-  int len = strlen(str);
-  if (end > len) end = len;
-  int s = 0, i = start;
-  while (i < end)
-    dest[s++] = str[i++];
-  dest[s] = '\0';
-}
-
-int collectRange(char* args, int* startptr, int* endptr) {
-  // single number
-  if (find(args, ':') == -1) {
-    if (args[0] == '-') {
-      substr(args, args, 1, strlen(args));
-      *startptr = 0 - atoi(args);
-    } else
-      *startptr = atoi(args);
-    *endptr = *startptr;
-    return 0;
-  }
-
-  int negStartFlag = 0, negEndFlag = 0;
-  char startstr[10];
-  getArg(startstr, args, ':');
-  char* endstr = args;
-
-  // handling negative indices
-  if (startstr[0] == '-') {
-    substr(startstr, startstr, 1, strlen(startstr));
-    negStartFlag = 1;
-  }
-  if (endstr[0] == '-') {
-    substr(endstr, endstr, 1, strlen(endstr));
-    negEndFlag = 1;
-  }
-
-  // handling empty indices
-  if (strcmp(startstr, "\0") == 0) *startptr = 1;
-  else *startptr = atoi(startstr);
-  if (strcmp(endstr, "\0") == 0) *endptr = -1;
-  else *endptr = atoi(endstr);
-
-  if (negStartFlag) *startptr = 0 - *startptr;
-  if (negEndFlag) *endptr = 0 - *endptr;
-  if (((*startptr > 0 && *endptr > 0) || 
-      (*startptr < 0 && *endptr < 0)) && (*startptr > *endptr))
-    return 1;
-
-  // if (*startptr == 0) *startptr = 1;
-  // if (*endptr == 0) *endptr = 1;
-  return 0;
-}
-
-int normalizeRange(File file, int* sp, int* ep) {
-  int l = file.len;
-  if (*ep > l) *ep = l;
-  else if (*ep < 1) *ep += l + 1;
-  if (*ep < 1) *ep = 1;
-
-  if (*sp > l) *sp = l;
-  else if (*sp < 1) *sp += l + 1;
-  if (*sp < 1) *sp = 1;
-  if ((*ep - *sp) < 0)
-    return 1;
-  return 0;
-}
-
-int numLines(int start, int end) {
-  return (end - start) + 1;
-}
-
-void toUpper(char* str) {
-  int i = 0;
-  while (str[i] != '\0') {
-    char c = str[i];
-    if (c <= 'z' && c >= 'a')
-      str[i] += ('Z' - 'z');
-    i++;  
-  }
-}
-
-void toLower(char* str) {
-  int i = 0;
-  while (str[i] != '\0') {
-    char c = str[i];
-    if (c <= 'Z' && c >= 'A')
-      str[i] -= ('Z' - 'z');
-    i++;  
-  }
-}
-
-void unline(char* str) {
-  int len = strlen(str) - 1;
-  for (; len > 0; len--) {
-    char c = str[len];
-    if (c == '\n')
-      break;
-  }
-  str[len] = '\0';
-}
-
-// syntactic sugar
-Node* lineAt(struct LinkedList* list, int pos) {
-  return nodeAt(list, pos-1);
-}
-
-void printl(int lineNum, char* line) {
-  if (lineNum < 10)
-    fprintf(2, "%d  | %s\n", lineNum, line);
-  else if (lineNum < 100)
-    fprintf(2, "%d | %s\n", lineNum, line);
-  else
-    fprintf(2, "%d| %s\n", lineNum, line);
-}
