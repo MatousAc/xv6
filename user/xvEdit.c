@@ -18,12 +18,13 @@ void bi();
 int main(int argc, char* argv[]) {
   // arg czeching
   if (argc < 2) {
-    fprintf(2, "specify a file you want to edit");
+    fprintf(2, "specify a file you want to edit\n");
     exit();
   } else if (argc > 2) {
-    fprintf(2, "only specify one file");
+    fprintf(2, "only specify one file\n");
     exit();
   }
+  // prep
   static char buf[MAXLINESIZE] = "";
   char cmdstr[MAXLINESIZE] = "";
   char args[MAXLINESIZE] = "";
@@ -39,17 +40,19 @@ int main(int argc, char* argv[]) {
   };
   struct File file;
   file.len = 0;
+  file.edited = 0;
   file.filename = argv[1];
   file.lines = MakeLinkedList();
   fprintf(2, "Welcome to xvEdit!\n");
 
-  // opening
+  // opening file
   file.fd = open(file.filename, O_RDONLY);
   if (file.fd == -1) {
     fprintf(2, "creating %s...\n",  file.filename);
     file.fd = open(file.filename, O_CREATE | O_WRONLY);
     close(file.fd);
-  } else { // populate Linked List
+  } else { 
+    // populate Linked List
     gatherLines(&file);
   }
   close(file.fd);
@@ -103,19 +106,20 @@ int main(int argc, char* argv[]) {
     }
   }
   close(file.fd);
-  // destroyLinkedList(file.lines);
   exit();
   return 0;
 }
 
 // commands
 void end(struct File* file, char* args) {
+  file->edited = 1;
   char* line = args;
   append(file->lines, line);
   file->len++;
 }
 
 void add(struct File* file, char* args) {
+  file->edited = 1;
   if (strlen(args) < 1) {
     fprintf(2, "you need to give a line number to insert before\n");
     return;
@@ -149,6 +153,7 @@ void drop(struct File* file, char* args) {
   if (numl == 1) fprintf(2, "Drop line %d (y/n)? ", start);
   else fprintf(2, "Drop %d lines [%d:%d] (y/n)? ", numl, start, end);
   if (confirmation() != 0) return;
+  file->edited = 1;
 
   // drop lines
   struct Node* curNode = (lineAt(file->lines, start))->prev;
@@ -173,6 +178,10 @@ void edit(struct File* file, char* args) {
   char* line = args;
 
   int lineNum = negatoi(lineStr);
+  fprintf(2, "replace line %d (y/n)? ", lineNum);
+  if (confirmation() != 0) return;
+  file->edited = 1;
+
   // remove
   destroyNode(file->lines, lineAt(file->lines, lineNum));
   // 1-based to 0-based insert
@@ -185,7 +194,7 @@ void list(struct File file, char* args) {
     return;
   }
 
-  int start, end;
+  int start, end, lineNum;
   if (collectRange(args, &start, &end) == 1) {
     fprintf(2, "error: start index is larger than end index\n");
     return;
@@ -195,12 +204,13 @@ void list(struct File file, char* args) {
     return;
   }
   
+  lineNum = start - 1;
   struct Node* curNode = (lineAt(file.lines, start))->prev;
   struct Node* stopNode = lineAt(file.lines, end);
   while (curNode != stopNode) {
     curNode = curNode->next;
     if (curNode == file.lines->tail) return;
-    fprintf(2, "%s\n", curNode->data);
+    printl(++lineNum, curNode->data);
   }
 }
 
@@ -215,6 +225,7 @@ void show(struct File file, char* args) {
 }
 
 void quit(struct File* file) {
+  if (file->edited == 0) return;
   fprintf(2, "save changes (y/n)? ");
   if (confirmation() != 0) return;
 
@@ -240,5 +251,5 @@ void quit(struct File* file) {
 }
 
 void bi() {
-  fprintf(2, "bad bi input\n");
+  fprintf(2, "bad input\n");
 }

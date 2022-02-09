@@ -1,36 +1,5 @@
 #include "xvEditHelpers.h"
-// helper f(x)s
-void gatherLines(File* file) {
-  char line[MAXLINESIZE];
-  while (getLine(file->fd, line)) {
-    append(file->lines, line);
-    file->len++;
-  }
-  fprintf(2, "%d lines read from %s\n", file->len, file->filename);
-}
 
-// grabs a single line from fileptr
-int getLine(int fileptr, char line[]) {
-  int len = strlen(line);
-  memset(line, 0, len);
-  char c[1];
-  int i;
-  for (i = 0; i < MAXLINESIZE - 1; i++) {
-    if (read(fileptr, c, 1) == 0) return strlen(line);
-    if (*c == '\n') break;
-    line[i] = *c;
-  }
-  line[i + 1] = '\0';
-  return 1;
-}
-
-void getArg(char* dest, char* args, char delimiter) {
-  int end = find(args, delimiter);
-  substr(dest, args, 0, end);
-  substr(args, args, end + 1, (int) strlen(args));
-}
-
-// 0 = yes, 1 = no
 int confirmation() {
   // get response
   char buf[MAXLINESIZE];
@@ -47,21 +16,7 @@ int confirmation() {
   }
 }
 
-int find(char* str, char c) {
-  for (int i = 0; i < strlen(str); i++)
-    if (str[i] == c) return i;
-  return -1;
-}
-
-void substr(char* dest, char* str, int start, int end) {
-  int len = strlen(str);
-  if (end > len) end = len;
-  int s = 0, i = start;
-  while (i < end)
-    dest[s++] = str[i++];
-  dest[s] = '\0';
-}
-
+// helper f(x)s
 int collectRange(char* args, int* startptr, int* endptr) {
   // single number
   if (find(args, ':') == -1) {
@@ -122,6 +77,66 @@ int numLines(int start, int end) {
   return (end - start) + 1;
 }
 
+
+// text
+void gatherLines(File* file) {
+  char line[MAXLINESIZE];
+  while (getLine(file->fd, line)) {
+    append(file->lines, line);
+    file->len++;
+  }
+  fprintf(2, "%d lines read from %s\n", file->len, file->filename);
+}
+
+int getLine(int fileptr, char line[]) {
+  int len = strlen(line);
+  memset(line, 0, len);
+  char c[1];
+  int i;
+  for (i = 0; i < MAXLINESIZE - 1; i++) {
+    if (read(fileptr, c, 1) == 0) return strlen(line);
+    if (*c == '\n') break;
+    line[i] = *c;
+  }
+  line[i + 1] = '\0';
+  return 1;
+}
+
+void getArg(char* dest, char* args, char delimiter) {
+  int end = find(args, delimiter);
+  substr(dest, args, 0, end);
+  substr(args, args, end + 1, (int) strlen(args));
+}
+
+void unline(char* str) {
+  int len = strlen(str) - 1;
+  for (; len > 0; len--) {
+    char c = str[len];
+    if (c == '\n')
+      break;
+  }
+  str[len] = '\0';
+}
+
+
+// str ops
+int find(char* str, char c) {
+  for (int i = 0; i < strlen(str); i++)
+    if (str[i] == c) return i;
+  return -1;
+}
+
+void substr(char* dest, char* str, int start, int end) {
+  int len = strlen(str);
+  if (end > len) end = len;
+  int s = 0, i = start;
+  while (i < end)
+    dest[s++] = str[i++];
+  dest[s] = '\0';
+}
+
+
+// standard str helps
 int negatoi(char* str) {
   if (str[0] == '-') {
     substr(str, str, 1, strlen(str));
@@ -150,16 +165,6 @@ void toLower(char* str) {
   }
 }
 
-void unline(char* str) {
-  int len = strlen(str) - 1;
-  for (; len > 0; len--) {
-    char c = str[len];
-    if (c == '\n')
-      break;
-  }
-  str[len] = '\0';
-}
-
 // syntactic sugar
 Node* lineAt(struct LinkedList* list, int pos) {
   return nodeAt(list, pos-1);
@@ -167,9 +172,9 @@ Node* lineAt(struct LinkedList* list, int pos) {
 
 void printl(int lineNum, char* line) {
   if (lineNum < 10)
-    fprintf(2, "%d  | %s\n", lineNum, line);
+    fprintf(2, "%d  : %s\n", lineNum, line);
   else if (lineNum < 100)
-    fprintf(2, "%d | %s\n", lineNum, line);
+    fprintf(2, "%d : %s\n", lineNum, line);
   else
-    fprintf(2, "%d| %s\n", lineNum, line);
+    fprintf(2, "%d: %s\n", lineNum, line);
 }
