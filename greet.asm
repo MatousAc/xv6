@@ -5,10 +5,8 @@ user/_greet:     file format elf32-i386
 Disassembly of section .text:
 
 00000000 <main>:
+#include "kernel/types.h"
 #include "user/user.h"
-
-
-
 
 int main(int argc, char *argv[]){
    0:	8d 4c 24 04          	lea    0x4(%esp),%ecx

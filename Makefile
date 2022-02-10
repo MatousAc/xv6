@@ -196,6 +196,7 @@ UPROGS=\
 	$U/_iotest\
 	$U/_xvEdit\
 	$U/_tryfork\
+	$U/_ezsh\
 	$U/_shutdown
 
 

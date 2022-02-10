@@ -2,7 +2,7 @@
 #include "kernel/fcntl.h"
 #include "user/user.h"
 #include "LinkedList.c"
-#include "xvEditHelpers.c"
+#include "helpers.c"
 
 enum { END, ADD, DROP, EDIT, LIST, SHOW, QUIT, BI };
 
