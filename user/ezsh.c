@@ -1,12 +1,12 @@
 #include "kernel/types.h"
 #include "user/user.h"
-#include "kernel/fcntl.h"
 #define MAXLINE 256
+#define MAXHISTORY 1000
 #define MAXARGS 10
 #define ARGLEN 20
 
 // prototypes
-int launch(char** args, int waitFlag);
+int launch(char** args, int background);
 int cd(char** args);
 int help(char** args);
 int myExit(char** args);
@@ -14,30 +14,51 @@ int getLine(int in, char line[], int max);
 char** split(char line[], char delim[], int* count);
 char* substr(char* str, int start, int end);
 int find(char* str, char delim[], int nth);
-int freeArgs(char** ptr, int len);
+void prompt(int cmdNum);
+int freeChptr(char** ptr, int len);
 
 int main(int argc, char *argv[]){
     if (argc > 1) {
 			fprintf(2, "ezsh takes no arguments\n");
     	exit();
 		}
-    
-		int len;
-		char line[MAXLINE];
-		fprintf(2, "EZ$ ");
-		while ((len = getLine(1, line, MAXLINE)) > 0) {
-			int waitFlag = 1;
-			if (line[strlen(line) - 1] == '&') waitFlag = 0;
-			char** args = split(line, " ", &argc);
-			if (launch(args, waitFlag) != 0) fprintf(2, "error\n");
-			freeArgs(args, argc);
-			fprintf(2, "EZ$ ");
+    // setup
+		int len, cmdNum = 0;
+		char cmd[MAXLINE];
+		char** history = malloc(MAXHISTORY * sizeof(char*));
+		prompt(cmdNum);
+		// repl
+		while ((len = getLine(1, cmd, MAXLINE)) > 0) {
+			// visiting cmd history
+			if (cmd != 0 && cmd[0] == '#')
+				strcpy(cmd, history[atoi(cmd + 1)]);
+			
+			int background = 0; // indicates when to run in background
+			if (cmd[strlen(cmd) - 1] == '&') {
+				background = 1;
+			}
+			
+			// parsing args
+			char** args = split(cmd, " ", &argc);
+			if (background == 1)
+				free(args[--argc]);
+
+			// running
+			if (launch(args, background) != 0) fprintf(2, "error\n");
+			// get ready for next command
+			char* cmdCpy = malloc(strlen(cmd) * sizeof(char));
+			strcpy(cmdCpy, cmd);
+			memset(cmd, 0, strlen(cmd));
+			history[cmdNum++] = cmdCpy;
+			freeChptr(args, argc);
+			prompt(cmdNum);
 		}
+		freeChptr(history, cmdNum);
 		exit();
 }
 
 // executes our command
-int launch(char** args, int waitFlag) {
+int launch(char** args, int background) {
 	// built-in commands
 	if (strcmp(args[0], "cd") == 0) return cd(args);
 	else if (strcmp(args[0], "help") == 0) return help(args);
@@ -48,12 +69,16 @@ int launch(char** args, int waitFlag) {
 	int pid = fork();
 	if (pid < 0) fprintf(2, "fork failed\n");
 	else if (pid == 0) { // child
+		if (background) {
+			close(0);
+			close(1);
+			close(2);
+		}
 		exec(args[0], args);
 		fprintf(2, "exec failed, command not recognized\n");
 		exit();
 	} else {
-		if (waitFlag)
-			wait();
+		if (!background) wait();
 	}
 	return 0;
 }
@@ -146,8 +171,18 @@ char* substr(char* str, int start, int end) {
 	return dst;
 }
 
-int free(char** ptr, int len) {
+int freeChptr(char** ptr, int len) {
 	for (int i = 0; i < len; i++)
 		free(ptr[i]);
 	free(ptr);
+	return 0;
+}
+
+void prompt(int cmdNum) {
+  if (cmdNum < 10)
+    fprintf(2, "%d   EZ$ ", cmdNum);
+  else if (cmdNum < 100)
+    fprintf(2, "%d  EZ$ ", cmdNum);
+  else
+    fprintf(2, "%d EZ$ ", cmdNum);
 }
