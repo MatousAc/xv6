@@ -62,100 +62,102 @@ int main(int argc, char* argv[]) {
   file.edited = 0;
       66:	c7 85 14 f8 ff ff 00 	movl   $0x0,-0x7ec(%ebp)
       6d:	00 00 00 
+  file.curLine = 0;
+      70:	c7 85 08 f8 ff ff 00 	movl   $0x0,-0x7f8(%ebp)
+      77:	00 00 00 
   char args[MAXLINESIZE] = "";
-      70:	f3 ab                	rep stos %eax,%es:(%edi)
+      7a:	f3 ab                	rep stos %eax,%es:(%edi)
   file.filename = argv[1];
-      72:	8b 42 04             	mov    0x4(%edx),%eax
-      75:	89 85 04 f8 ff ff    	mov    %eax,-0x7fc(%ebp)
+      7c:	8b 42 04             	mov    0x4(%edx),%eax
+      7f:	89 85 00 f8 ff ff    	mov    %eax,-0x800(%ebp)
   file.lines = MakeLinkedList();
-      7b:	e8 70 04 00 00       	call   4f0 <MakeLinkedList>
+      85:	e8 66 04 00 00       	call   4f0 <MakeLinkedList>
   fprintf(2, "Welcome to xvEdit!\n");
-      80:	51                   	push   %ecx
-      81:	51                   	push   %ecx
-      82:	68 03 1b 00 00       	push   $0x1b03
-      87:	6a 02                	push   $0x2
+      8a:	51                   	push   %ecx
+      8b:	51                   	push   %ecx
+      8c:	68 03 1b 00 00       	push   $0x1b03
+      91:	6a 02                	push   $0x2
   file.lines = MakeLinkedList();
-      89:	89 85 0c f8 ff ff    	mov    %eax,-0x7f4(%ebp)
+      93:	89 85 0c f8 ff ff    	mov    %eax,-0x7f4(%ebp)
   fprintf(2, "Welcome to xvEdit!\n");
-      8f:	e8 cc 17 00 00       	call   1860 <fprintf>
+      99:	e8 c2 17 00 00       	call   1860 <fprintf>
 
   // opening file
   file.fd = open(file.filename, O_RDONLY);
-      94:	5b                   	pop    %ebx
-      95:	5e                   	pop    %esi
-      96:	6a 00                	push   $0x0
-      98:	ff b5 04 f8 ff ff    	pushl  -0x7fc(%ebp)
-      9e:	e8 8f 14 00 00       	call   1532 <open>
+      9e:	5b                   	pop    %ebx
+      9f:	5e                   	pop    %esi
+      a0:	6a 00                	push   $0x0
+      a2:	ff b5 00 f8 ff ff    	pushl  -0x800(%ebp)
+      a8:	e8 85 14 00 00       	call   1532 <open>
   if (file.fd == -1) {
-      a3:	83 c4 10             	add    $0x10,%esp
+      ad:	83 c4 10             	add    $0x10,%esp
   file.fd = open(file.filename, O_RDONLY);
-      a6:	89 85 08 f8 ff ff    	mov    %eax,-0x7f8(%ebp)
+      b0:	89 85 04 f8 ff ff    	mov    %eax,-0x7fc(%ebp)
   if (file.fd == -1) {
-      ac:	83 c0 01             	add    $0x1,%eax
-      af:	0f 84 57 02 00 00    	je     30c <main+0x30c>
+      b6:	83 c0 01             	add    $0x1,%eax
+      b9:	0f 84 4d 02 00 00    	je     30c <main+0x30c>
     fprintf(2, "creating %s...\n",  file.filename);
     file.fd = open(file.filename, O_CREATE | O_WRONLY);
     close(file.fd);
   } else { 
     // populate Linked List
     gatherLines(&file);
-      b5:	8d 85 04 f8 ff ff    	lea    -0x7fc(%ebp),%eax
-      bb:	83 ec 0c             	sub    $0xc,%esp
-      be:	50                   	push   %eax
-      bf:	89 85 f4 f7 ff ff    	mov    %eax,-0x80c(%ebp)
-      c5:	e8 26 07 00 00       	call   7f0 <gatherLines>
-      ca:	83 c4 10             	add    $0x10,%esp
+      bf:	8d 85 00 f8 ff ff    	lea    -0x800(%ebp),%eax
+      c5:	83 ec 0c             	sub    $0xc,%esp
+      c8:	50                   	push   %eax
+      c9:	89 85 f4 f7 ff ff    	mov    %eax,-0x80c(%ebp)
+      cf:	e8 1c 07 00 00       	call   7f0 <gatherLines>
+      d4:	83 c4 10             	add    $0x10,%esp
   }
   close(file.fd);
-      cd:	83 ec 0c             	sub    $0xc,%esp
-      d0:	ff b5 08 f8 ff ff    	pushl  -0x7f8(%ebp)
-      d6:	8d 9d 18 f8 ff ff    	lea    -0x7e8(%ebp),%ebx
-      dc:	e8 39 14 00 00       	call   151a <close>
-      e1:	83 c4 10             	add    $0x10,%esp
-      e4:	8d 74 26 00          	lea    0x0(%esi,%eiz,1),%esi
+      d7:	83 ec 0c             	sub    $0xc,%esp
+      da:	ff b5 04 f8 ff ff    	pushl  -0x7fc(%ebp)
+      e0:	8d 9d 18 f8 ff ff    	lea    -0x7e8(%ebp),%ebx
+      e6:	e8 2f 14 00 00       	call   151a <close>
+      eb:	83 c4 10             	add    $0x10,%esp
+      ee:	66 90                	xchg   %ax,%ax
 
   // xvEdit>
   while (cmd != QUIT) {
     fprintf(2, "xvEdit> ");
-      e8:	83 ec 08             	sub    $0x8,%esp
-      eb:	68 27 1b 00 00       	push   $0x1b27
-      f0:	6a 02                	push   $0x2
-      f2:	e8 69 17 00 00       	call   1860 <fprintf>
+      f0:	83 ec 08             	sub    $0x8,%esp
+      f3:	68 27 1b 00 00       	push   $0x1b27
+      f8:	6a 02                	push   $0x2
+      fa:	e8 61 17 00 00       	call   1860 <fprintf>
     memset(buf, 0, nbuf);
-      f7:	83 c4 0c             	add    $0xc,%esp
-      fa:	68 e8 03 00 00       	push   $0x3e8
-      ff:	6a 00                	push   $0x0
-     101:	68 a0 25 00 00       	push   $0x25a0
-     106:	e8 45 12 00 00       	call   1350 <memset>
+      ff:	83 c4 0c             	add    $0xc,%esp
+     102:	68 e8 03 00 00       	push   $0x3e8
+     107:	6a 00                	push   $0x0
+     109:	68 a0 25 00 00       	push   $0x25a0
+     10e:	e8 3d 12 00 00       	call   1350 <memset>
     gets(buf, nbuf);
-     10b:	59                   	pop    %ecx
-     10c:	5e                   	pop    %esi
-     10d:	68 e8 03 00 00       	push   $0x3e8
-     112:	68 a0 25 00 00       	push   $0x25a0
-     117:	e8 94 12 00 00       	call   13b0 <gets>
+     113:	59                   	pop    %ecx
+     114:	5e                   	pop    %esi
+     115:	68 e8 03 00 00       	push   $0x3e8
+     11a:	68 a0 25 00 00       	push   $0x25a0
+     11f:	e8 8c 12 00 00       	call   13b0 <gets>
     
     unline(buf);
-     11c:	c7 04 24 a0 25 00 00 	movl   $0x25a0,(%esp)
-     123:	e8 38 07 00 00       	call   860 <unline>
+     124:	c7 04 24 a0 25 00 00 	movl   $0x25a0,(%esp)
+     12b:	e8 30 07 00 00       	call   860 <unline>
     substr(cmdstr, buf, 0, 4);
-     128:	6a 04                	push   $0x4
-     12a:	6a 00                	push   $0x0
-     12c:	68 a0 25 00 00       	push   $0x25a0
-     131:	53                   	push   %ebx
-     132:	e8 d9 07 00 00       	call   910 <substr>
+     130:	6a 04                	push   $0x4
+     132:	6a 00                	push   $0x0
+     134:	68 a0 25 00 00       	push   $0x25a0
+     139:	53                   	push   %ebx
+     13a:	e8 d1 07 00 00       	call   910 <substr>
   return atoi(str);
 }
 
 void toUpper(char* str) {
   int i = 0;
   while (str[i] != '\0') {
-     137:	0f b6 85 18 f8 ff ff 	movzbl -0x7e8(%ebp),%eax
-     13e:	83 c4 20             	add    $0x20,%esp
-     141:	84 c0                	test   %al,%al
-     143:	74 22                	je     167 <main+0x167>
-     145:	89 da                	mov    %ebx,%edx
-     147:	89 f6                	mov    %esi,%esi
-     149:	8d bc 27 00 00 00 00 	lea    0x0(%edi,%eiz,1),%edi
+     13f:	0f b6 85 18 f8 ff ff 	movzbl -0x7e8(%ebp),%eax
+     146:	83 c4 20             	add    $0x20,%esp
+     149:	84 c0                	test   %al,%al
+     14b:	74 1a                	je     167 <main+0x167>
+     14d:	89 da                	mov    %ebx,%edx
+     14f:	90                   	nop
     char c = str[i];
     if (c <= 'z' && c >= 'a')
      150:	8d 48 9f             	lea    -0x61(%eax),%ecx
@@ -218,7 +220,7 @@ void append(struct LinkedList* list, char* data) { insert(list, data, list->len)
   file->len++;
      1cc:	83 85 10 f8 ff ff 01 	addl   $0x1,-0x7f0(%ebp)
      1d3:	83 c4 10             	add    $0x10,%esp
-     1d6:	e9 0d ff ff ff       	jmp    e8 <main+0xe8>
+     1d6:	e9 15 ff ff ff       	jmp    f0 <main+0xf0>
     fprintf(2, "only specify one file\n");
      1db:	57                   	push   %edi
      1dc:	57                   	push   %edi
@@ -271,7 +273,7 @@ void append(struct LinkedList* list, char* data) { insert(list, data, list->len)
      259:	e8 72 10 00 00       	call   12d0 <strcmp>
      25e:	83 c4 10             	add    $0x10,%esp
      261:	85 c0                	test   %eax,%eax
-     263:	0f 85 12 01 00 00    	jne    37b <main+0x37b>
+     263:	0f 85 11 01 00 00    	jne    37a <main+0x37a>
      269:	8b 85 0c f8 ff ff    	mov    -0x7f4(%ebp),%eax
   }
 }
@@ -304,7 +306,7 @@ void show(struct File file, char* args) {
      295:	8b 85 f0 f7 ff ff    	mov    -0x810(%ebp),%eax
      29b:	3b 70 04             	cmp    0x4(%eax),%esi
      29e:	75 e1                	jne    281 <main+0x281>
-     2a0:	e9 43 fe ff ff       	jmp    e8 <main+0xe8>
+     2a0:	e9 4b fe ff ff       	jmp    f0 <main+0xf0>
       add(&file, args);
      2a5:	8d 85 00 fc ff ff    	lea    -0x400(%ebp),%eax
      2ab:	52                   	push   %edx
@@ -313,7 +315,7 @@ void show(struct File file, char* args) {
      2ae:	ff b5 f4 f7 ff ff    	pushl  -0x80c(%ebp)
      2b4:	e8 47 0a 00 00       	call   d00 <add>
      2b9:	83 c4 10             	add    $0x10,%esp
-     2bc:	e9 27 fe ff ff       	jmp    e8 <main+0xe8>
+     2bc:	e9 2f fe ff ff       	jmp    f0 <main+0xf0>
       drop(&file, args);
      2c1:	8d 85 00 fc ff ff    	lea    -0x400(%ebp),%eax
      2c7:	51                   	push   %ecx
@@ -322,7 +324,7 @@ void show(struct File file, char* args) {
      2ca:	ff b5 f4 f7 ff ff    	pushl  -0x80c(%ebp)
      2d0:	e8 ab 0a 00 00       	call   d80 <drop>
      2d5:	83 c4 10             	add    $0x10,%esp
-     2d8:	e9 0b fe ff ff       	jmp    e8 <main+0xe8>
+     2d8:	e9 13 fe ff ff       	jmp    f0 <main+0xf0>
     fprintf(2, "specify a file you want to edit\n");
      2dd:	50                   	push   %eax
      2de:	50                   	push   %eax
@@ -339,10 +341,10 @@ void show(struct File file, char* args) {
      2f9:	ff b5 f4 f7 ff ff    	pushl  -0x80c(%ebp)
      2ff:	e8 3c 0c 00 00       	call   f40 <edit>
      304:	83 c4 10             	add    $0x10,%esp
-     307:	e9 dc fd ff ff       	jmp    e8 <main+0xe8>
+     307:	e9 e4 fd ff ff       	jmp    f0 <main+0xf0>
     fprintf(2, "creating %s...\n",  file.filename);
      30c:	57                   	push   %edi
-     30d:	ff b5 04 f8 ff ff    	pushl  -0x7fc(%ebp)
+     30d:	ff b5 00 f8 ff ff    	pushl  -0x800(%ebp)
      313:	68 17 1b 00 00       	push   $0x1b17
      318:	6a 02                	push   $0x2
      31a:	e8 41 15 00 00       	call   1860 <fprintf>
@@ -350,69 +352,69 @@ void show(struct File file, char* args) {
      31f:	58                   	pop    %eax
      320:	5a                   	pop    %edx
      321:	68 01 02 00 00       	push   $0x201
-     326:	ff b5 04 f8 ff ff    	pushl  -0x7fc(%ebp)
+     326:	ff b5 00 f8 ff ff    	pushl  -0x800(%ebp)
      32c:	e8 01 12 00 00       	call   1532 <open>
     close(file.fd);
      331:	89 04 24             	mov    %eax,(%esp)
     file.fd = open(file.filename, O_CREATE | O_WRONLY);
-     334:	89 85 08 f8 ff ff    	mov    %eax,-0x7f8(%ebp)
+     334:	89 85 04 f8 ff ff    	mov    %eax,-0x7fc(%ebp)
     close(file.fd);
      33a:	e8 db 11 00 00       	call   151a <close>
-     33f:	8d 85 04 f8 ff ff    	lea    -0x7fc(%ebp),%eax
+     33f:	8d 85 00 f8 ff ff    	lea    -0x800(%ebp),%eax
      345:	83 c4 10             	add    $0x10,%esp
      348:	89 85 f4 f7 ff ff    	mov    %eax,-0x80c(%ebp)
-     34e:	e9 7a fd ff ff       	jmp    cd <main+0xcd>
+     34e:	e9 84 fd ff ff       	jmp    d7 <main+0xd7>
       list(file, args);
      353:	8d 85 00 fc ff ff    	lea    -0x400(%ebp),%eax
      359:	57                   	push   %edi
-     35a:	57                   	push   %edi
-     35b:	8b b5 f4 f7 ff ff    	mov    -0x80c(%ebp),%esi
-     361:	b9 05 00 00 00       	mov    $0x5,%ecx
-     366:	50                   	push   %eax
-     367:	83 ec 14             	sub    $0x14,%esp
-     36a:	89 e7                	mov    %esp,%edi
-     36c:	f3 a5                	rep movsl %ds:(%esi),%es:(%edi)
-     36e:	e8 7d 0c 00 00       	call   ff0 <list>
-     373:	83 c4 20             	add    $0x20,%esp
-     376:	e9 6d fd ff ff       	jmp    e8 <main+0xe8>
+     35a:	8b b5 f4 f7 ff ff    	mov    -0x80c(%ebp),%esi
+     360:	b9 06 00 00 00       	mov    $0x6,%ecx
+     365:	50                   	push   %eax
+     366:	83 ec 18             	sub    $0x18,%esp
+     369:	89 e7                	mov    %esp,%edi
+     36b:	f3 a5                	rep movsl %ds:(%esi),%es:(%edi)
+     36d:	e8 7e 0c 00 00       	call   ff0 <list>
+     372:	83 c4 20             	add    $0x20,%esp
+     375:	e9 76 fd ff ff       	jmp    f0 <main+0xf0>
     else if (strcmp(cmdstr, "QUIT") == 0) {cmd = QUIT;}
+     37a:	50                   	push   %eax
      37b:	50                   	push   %eax
-     37c:	50                   	push   %eax
-     37d:	68 4e 1b 00 00       	push   $0x1b4e
-     382:	53                   	push   %ebx
-     383:	e8 48 0f 00 00       	call   12d0 <strcmp>
-     388:	83 c4 10             	add    $0x10,%esp
-     38b:	85 c0                	test   %eax,%eax
-     38d:	74 16                	je     3a5 <main+0x3a5>
+     37c:	68 4e 1b 00 00       	push   $0x1b4e
+     381:	53                   	push   %ebx
+     382:	e8 49 0f 00 00       	call   12d0 <strcmp>
+     387:	83 c4 10             	add    $0x10,%esp
+     38a:	85 c0                	test   %eax,%eax
+     38c:	74 16                	je     3a4 <main+0x3a4>
   fprintf(2, "changes saved\n");
   return;
 }
 
 void bi() {
   fprintf(2, "bad input\n");
+     38e:	50                   	push   %eax
      38f:	50                   	push   %eax
-     390:	50                   	push   %eax
-     391:	68 53 1b 00 00       	push   $0x1b53
-     396:	6a 02                	push   $0x2
-     398:	e8 c3 14 00 00       	call   1860 <fprintf>
-     39d:	83 c4 10             	add    $0x10,%esp
-     3a0:	e9 43 fd ff ff       	jmp    e8 <main+0xe8>
+     390:	68 53 1b 00 00       	push   $0x1b53
+     395:	6a 02                	push   $0x2
+     397:	e8 c4 14 00 00       	call   1860 <fprintf>
+     39c:	83 c4 10             	add    $0x10,%esp
+     39f:	e9 4c fd ff ff       	jmp    f0 <main+0xf0>
       quit(&file);
-     3a5:	83 ec 0c             	sub    $0xc,%esp
-     3a8:	ff b5 f4 f7 ff ff    	pushl  -0x80c(%ebp)
-     3ae:	e8 ad 0d 00 00       	call   1160 <quit>
+     3a4:	83 ec 0c             	sub    $0xc,%esp
+     3a7:	ff b5 f4 f7 ff ff    	pushl  -0x80c(%ebp)
+     3ad:	e8 ae 0d 00 00       	call   1160 <quit>
   close(file.fd);
-     3b3:	58                   	pop    %eax
-     3b4:	ff b5 08 f8 ff ff    	pushl  -0x7f8(%ebp)
-     3ba:	e8 5b 11 00 00       	call   151a <close>
+     3b2:	58                   	pop    %eax
+     3b3:	ff b5 04 f8 ff ff    	pushl  -0x7fc(%ebp)
+     3b9:	e8 5c 11 00 00       	call   151a <close>
   exit();
-     3bf:	e8 2e 11 00 00       	call   14f2 <exit>
-     3c4:	66 90                	xchg   %ax,%ax
-     3c6:	66 90                	xchg   %ax,%ax
-     3c8:	66 90                	xchg   %ax,%ax
-     3ca:	66 90                	xchg   %ax,%ax
-     3cc:	66 90                	xchg   %ax,%ax
-     3ce:	66 90                	xchg   %ax,%ax
+     3be:	e8 2f 11 00 00       	call   14f2 <exit>
+     3c3:	66 90                	xchg   %ax,%ax
+     3c5:	66 90                	xchg   %ax,%ax
+     3c7:	66 90                	xchg   %ax,%ax
+     3c9:	66 90                	xchg   %ax,%ax
+     3cb:	66 90                	xchg   %ax,%ax
+     3cd:	66 90                	xchg   %ax,%ax
+     3cf:	90                   	nop
 
 000003d0 <safestrcpy>:
 char* safestrcpy(char *s, const char *t, int n) {
@@ -823,11 +825,11 @@ int normalizeRange(File file, int* sp, int* ep) {
      6e0:	55                   	push   %ebp
      6e1:	89 e5                	mov    %esp,%ebp
      6e3:	53                   	push   %ebx
-     6e4:	8b 4d 20             	mov    0x20(%ebp),%ecx
+     6e4:	8b 4d 24             	mov    0x24(%ebp),%ecx
   int l = file.len;
-     6e7:	8b 45 14             	mov    0x14(%ebp),%eax
+     6e7:	8b 45 18             	mov    0x18(%ebp),%eax
 int normalizeRange(File file, int* sp, int* ep) {
-     6ea:	8b 5d 1c             	mov    0x1c(%ebp),%ebx
+     6ea:	8b 5d 20             	mov    0x20(%ebp),%ebx
   if (*ep > l) *ep = l;
      6ed:	8b 11                	mov    (%ecx),%edx
      6ef:	39 c2                	cmp    %eax,%edx
@@ -980,7 +982,7 @@ void gatherLines(File* file) {
      806:	8d 76 00             	lea    0x0(%esi),%esi
      809:	8d bc 27 00 00 00 00 	lea    0x0(%edi,%eiz,1),%edi
     append(file->lines, line);
-     810:	8b 43 08             	mov    0x8(%ebx),%eax
+     810:	8b 43 0c             	mov    0xc(%ebx),%eax
 void append(struct LinkedList* list, char* data) { insert(list, data, list->len); }
      813:	83 ec 04             	sub    $0x4,%esp
      816:	ff 70 08             	pushl  0x8(%eax)
@@ -988,7 +990,7 @@ void append(struct LinkedList* list, char* data) { insert(list, data, list->len)
      81a:	50                   	push   %eax
      81b:	e8 40 fd ff ff       	call   560 <insert>
     file->len++;
-     820:	83 43 0c 01          	addl   $0x1,0xc(%ebx)
+     820:	83 43 10 01          	addl   $0x1,0x10(%ebx)
      824:	83 c4 10             	add    $0x10,%esp
   while (getLine(file->fd, line)) {
      827:	83 ec 08             	sub    $0x8,%esp
@@ -1000,7 +1002,7 @@ void append(struct LinkedList* list, char* data) { insert(list, data, list->len)
      838:	75 d6                	jne    810 <gatherLines+0x20>
   fprintf(2, "%d lines read from %s\n", file->len, file->filename);
      83a:	ff 33                	pushl  (%ebx)
-     83c:	ff 73 0c             	pushl  0xc(%ebx)
+     83c:	ff 73 10             	pushl  0x10(%ebx)
      83f:	68 28 1a 00 00       	push   $0x1a28
      844:	6a 02                	push   $0x2
      846:	e8 15 10 00 00       	call   1860 <fprintf>
@@ -1594,15 +1596,15 @@ void end(struct File* file, char* args) {
      cd4:	83 ec 08             	sub    $0x8,%esp
      cd7:	8b 5d 08             	mov    0x8(%ebp),%ebx
   append(file->lines, line);
-     cda:	8b 43 08             	mov    0x8(%ebx),%eax
+     cda:	8b 43 0c             	mov    0xc(%ebx),%eax
   file->edited = 1;
-     cdd:	c7 43 10 01 00 00 00 	movl   $0x1,0x10(%ebx)
+     cdd:	c7 43 14 01 00 00 00 	movl   $0x1,0x14(%ebx)
      ce4:	ff 70 08             	pushl  0x8(%eax)
      ce7:	ff 75 0c             	pushl  0xc(%ebp)
      cea:	50                   	push   %eax
      ceb:	e8 70 f8 ff ff       	call   560 <insert>
   file->len++;
-     cf0:	83 43 0c 01          	addl   $0x1,0xc(%ebx)
+     cf0:	83 43 10 01          	addl   $0x1,0x10(%ebx)
 }
      cf4:	83 c4 10             	add    $0x10,%esp
      cf7:	8b 5d fc             	mov    -0x4(%ebp),%ebx
@@ -1621,7 +1623,7 @@ void add(struct File* file, char* args) {
      d09:	8b 5d 08             	mov    0x8(%ebp),%ebx
      d0c:	8b 75 0c             	mov    0xc(%ebp),%esi
   file->edited = 1;
-     d0f:	c7 43 10 01 00 00 00 	movl   $0x1,0x10(%ebx)
+     d0f:	c7 43 14 01 00 00 00 	movl   $0x1,0x14(%ebx)
   if (strlen(args) < 1) {
      d16:	56                   	push   %esi
      d17:	e8 04 06 00 00       	call   1320 <strlen>
@@ -1643,10 +1645,10 @@ void add(struct File* file, char* args) {
      d3d:	83 e8 01             	sub    $0x1,%eax
      d40:	50                   	push   %eax
      d41:	56                   	push   %esi
-     d42:	ff 73 08             	pushl  0x8(%ebx)
+     d42:	ff 73 0c             	pushl  0xc(%ebx)
      d45:	e8 16 f8 ff ff       	call   560 <insert>
   file->len++;
-     d4a:	83 43 0c 01          	addl   $0x1,0xc(%ebx)
+     d4a:	83 43 10 01          	addl   $0x1,0x10(%ebx)
      d4e:	83 c4 10             	add    $0x10,%esp
 }
      d51:	8d 65 f4             	lea    -0xc(%ebp),%esp
@@ -1700,9 +1702,9 @@ void drop(struct File* file, char* args) {
      db5:	83 f8 01             	cmp    $0x1,%eax
      db8:	0f 84 0a 01 00 00    	je     ec8 <drop+0x148>
   if (normalizeRange(*file, &start, &end) == 1) {
-     dbe:	83 ec 04             	sub    $0x4,%esp
-     dc1:	56                   	push   %esi
-     dc2:	57                   	push   %edi
+     dbe:	56                   	push   %esi
+     dbf:	57                   	push   %edi
+     dc0:	ff 73 14             	pushl  0x14(%ebx)
      dc3:	ff 73 10             	pushl  0x10(%ebx)
      dc6:	ff 73 0c             	pushl  0xc(%ebx)
      dc9:	ff 73 08             	pushl  0x8(%ebx)
@@ -1739,10 +1741,10 @@ void drop(struct File* file, char* args) {
   return nodeAt(list, pos-1);
      e1b:	8b 45 e0             	mov    -0x20(%ebp),%eax
   struct Node* curNode = (lineAt(file->lines, start))->prev;
-     e1e:	8b 4b 08             	mov    0x8(%ebx),%ecx
+     e1e:	8b 4b 0c             	mov    0xc(%ebx),%ecx
      e21:	83 ec 08             	sub    $0x8,%esp
   file->edited = 1;
-     e24:	c7 43 10 01 00 00 00 	movl   $0x1,0x10(%ebx)
+     e24:	c7 43 14 01 00 00 00 	movl   $0x1,0x14(%ebx)
      e2b:	83 e8 01             	sub    $0x1,%eax
      e2e:	89 4d d0             	mov    %ecx,-0x30(%ebp)
      e31:	50                   	push   %eax
@@ -1766,7 +1768,7 @@ void drop(struct File* file, char* args) {
      e56:	75 0b                	jne    e63 <drop+0xe3>
      e58:	eb 21                	jmp    e7b <drop+0xfb>
      e5a:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
-     e60:	8b 4b 08             	mov    0x8(%ebx),%ecx
+     e60:	8b 4b 0c             	mov    0xc(%ebx),%ecx
     curNode = curNode->next;
      e63:	8b 76 08             	mov    0x8(%esi),%esi
     destroyNode(file->lines, curNode);
@@ -1775,7 +1777,7 @@ void drop(struct File* file, char* args) {
      e6a:	51                   	push   %ecx
      e6b:	e8 40 f6 ff ff       	call   4b0 <destroyNode>
     file->len--;
-     e70:	83 6b 0c 01          	subl   $0x1,0xc(%ebx)
+     e70:	83 6b 10 01          	subl   $0x1,0x10(%ebx)
   while (curNode != stopNode) {
      e74:	83 c4 10             	add    $0x10,%esp
      e77:	39 f7                	cmp    %esi,%edi
@@ -1914,9 +1916,9 @@ void edit(struct File* file, char* args) {
      fb0:	83 ec 08             	sub    $0x8,%esp
      fb3:	83 ee 01             	sub    $0x1,%esi
   destroyNode(file->lines, lineAt(file->lines, lineNum));
-     fb6:	8b 78 08             	mov    0x8(%eax),%edi
+     fb6:	8b 78 0c             	mov    0xc(%eax),%edi
   file->edited = 1;
-     fb9:	c7 40 10 01 00 00 00 	movl   $0x1,0x10(%eax)
+     fb9:	c7 40 14 01 00 00 00 	movl   $0x1,0x14(%eax)
      fc0:	56                   	push   %esi
      fc1:	57                   	push   %edi
      fc2:	e8 79 f4 ff ff       	call   440 <nodeAt>
@@ -1931,7 +1933,7 @@ void edit(struct File* file, char* args) {
      fd3:	83 c4 0c             	add    $0xc,%esp
      fd6:	56                   	push   %esi
      fd7:	53                   	push   %ebx
-     fd8:	ff 70 08             	pushl  0x8(%eax)
+     fd8:	ff 70 0c             	pushl  0xc(%eax)
      fdb:	e8 80 f5 ff ff       	call   560 <insert>
      fe0:	83 c4 10             	add    $0x10,%esp
 }
@@ -1953,8 +1955,8 @@ void list(struct File file, char* args) {
      ff5:	53                   	push   %ebx
      ff6:	83 ec 38             	sub    $0x38,%esp
   if (strlen(args) < 1) {
-     ff9:	ff 75 1c             	pushl  0x1c(%ebp)
-     ffc:	8b 75 10             	mov    0x10(%ebp),%esi
+     ff9:	ff 75 20             	pushl  0x20(%ebp)
+     ffc:	8b 75 14             	mov    0x14(%ebp),%esi
      fff:	e8 1c 03 00 00       	call   1320 <strlen>
     1004:	83 c4 10             	add    $0x10,%esp
     1007:	85 c0                	test   %eax,%eax
@@ -1980,15 +1982,15 @@ void list(struct File file, char* args) {
     102e:	83 ec 04             	sub    $0x4,%esp
     1031:	53                   	push   %ebx
     1032:	57                   	push   %edi
-    1033:	ff 75 1c             	pushl  0x1c(%ebp)
+    1033:	ff 75 20             	pushl  0x20(%ebp)
     1036:	e8 95 f9 ff ff       	call   9d0 <collectRange>
     103b:	83 c4 10             	add    $0x10,%esp
     103e:	83 f8 01             	cmp    $0x1,%eax
     1041:	0f 84 91 00 00 00    	je     10d8 <list+0xe8>
   if (normalizeRange(file, &start, &end) == 1) {
-    1047:	83 ec 04             	sub    $0x4,%esp
-    104a:	53                   	push   %ebx
-    104b:	57                   	push   %edi
+    1047:	53                   	push   %ebx
+    1048:	57                   	push   %edi
+    1049:	ff 75 1c             	pushl  0x1c(%ebp)
     104c:	ff 75 18             	pushl  0x18(%ebp)
     104f:	ff 75 14             	pushl  0x14(%ebp)
     1052:	ff 75 10             	pushl  0x10(%ebp)
@@ -2083,7 +2085,7 @@ void show(struct File file, char* args) {
     1114:	56                   	push   %esi
     1115:	53                   	push   %ebx
     1116:	83 ec 0c             	sub    $0xc,%esp
-    1119:	8b 7d 10             	mov    0x10(%ebp),%edi
+    1119:	8b 7d 14             	mov    0x14(%ebp),%edi
   struct Node* cur = file.lines->head->next;
     111c:	8b 07                	mov    (%edi),%eax
     111e:	8b 58 08             	mov    0x8(%eax),%ebx
@@ -2126,7 +2128,7 @@ void quit(struct File* file) {
     1164:	53                   	push   %ebx
     1165:	8b 5d 08             	mov    0x8(%ebp),%ebx
   if (file->edited == 0) return;
-    1168:	8b 4b 10             	mov    0x10(%ebx),%ecx
+    1168:	8b 4b 14             	mov    0x14(%ebx),%ecx
     116b:	85 c9                	test   %ecx,%ecx
     116d:	75 11                	jne    1180 <quit+0x20>
 }
@@ -2167,7 +2169,7 @@ void quit(struct File* file) {
   if (file->fd < 0) {
     11c7:	0f 88 93 00 00 00    	js     1260 <quit+0x100>
   struct Node* cur = file->lines->head->next;
-    11cd:	8b 53 08             	mov    0x8(%ebx),%edx
+    11cd:	8b 53 0c             	mov    0xc(%ebx),%edx
     11d0:	8b 0a                	mov    (%edx),%ecx
     11d2:	8b 71 08             	mov    0x8(%ecx),%esi
   while (cur != file->lines->tail) {
@@ -2190,7 +2192,7 @@ void quit(struct File* file) {
     1204:	ff 73 04             	pushl  0x4(%ebx)
     1207:	e8 06 03 00 00       	call   1512 <write>
   while (cur != file->lines->tail) {
-    120c:	8b 43 08             	mov    0x8(%ebx),%eax
+    120c:	8b 43 0c             	mov    0xc(%ebx),%eax
     cur = cur->next;
     120f:	8b 76 08             	mov    0x8(%esi),%esi
   while (cur != file->lines->tail) {

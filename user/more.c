@@ -4,7 +4,7 @@
 #include "LinkedList.c"
 #include "helpers.c"
 
-enum { END, ADD, DROP, EDIT, LIST, SHOW, QUIT, BI };
+enum { FORWARD, FASTFORWARD, BACK, SCROLL, LINE, HELP, QUIT, BI };
 
 void end(struct File* file, char* args);
 void add(struct File* file, char* args);
@@ -18,20 +18,21 @@ void bi();
 int main(int argc, char* argv[]) {
   // arg czeching
   if (argc < 2) {
-    fprintf(2, "specify a file you want to edit\n");
+    fprintf(2, "more: bad usage\nTry 'more --help' for more information.\n");
     exit();
   } else if (argc > 2) {
-    fprintf(2, "only specify one file\n");
+    fprintf(2, "this version of more only supports one file at a time.\n");
     exit();
   }
+	
   // prep
-  static char buf[MAXLINESIZE] = "";
-  char cmdstr[MAXLINESIZE] = "";
-  char args[MAXLINESIZE] = "";
-  int nbuf = sizeof(buf);
-  int cmd = END;
+  char cmd[1] = "w";
   // objects we will pass around
-  struct stat {
+  // typedef struct Terminal {
+	// 	int width;
+	// 	int height;
+	// } terminal;
+	struct stat {
     short type;
     int dev;
     uint ino;
@@ -41,72 +42,24 @@ int main(int argc, char* argv[]) {
   struct File file;
   file.len = 0;
   file.edited = 0;
-  file.curLine = 0;
   file.filename = argv[1];
   file.lines = MakeLinkedList();
-  fprintf(2, "Welcome to xvEdit!\n");
 
   // opening file
   file.fd = open(file.filename, O_RDONLY);
   if (file.fd == -1) {
-    fprintf(2, "creating %s...\n",  file.filename);
-    file.fd = open(file.filename, O_CREATE | O_WRONLY);
-    close(file.fd);
+    fprintf(2, "file could not be opened\n",  file.filename);
   } else { 
     // populate Linked List
     gatherLines(&file);
   }
   close(file.fd);
 
-  // xvEdit>
-  while (cmd != QUIT) {
-    fprintf(2, "xvEdit> ");
-    memset(buf, 0, nbuf);
-    gets(buf, nbuf);
-    
-    unline(buf);
-    substr(cmdstr, buf, 0, 4);
-    toUpper(cmdstr);
-    substr(args, buf, strlen(cmdstr) + 1, strlen(buf));
-
-    if      (strcmp(cmdstr, "@END") == 0) {cmd = END;}
-    else if (strcmp(cmdstr, "ADD<") == 0) {cmd = ADD;}
-    else if (strcmp(cmdstr, "DROP") == 0) {cmd = DROP;}
-    else if (strcmp(cmdstr, "EDIT") == 0) {cmd = EDIT;}
-    else if (strcmp(cmdstr, "LIST") == 0) {cmd = LIST;}
-    else if (strcmp(cmdstr, "SHOW") == 0) {cmd = SHOW;}
-    else if (strcmp(cmdstr, "QUIT") == 0) {cmd = QUIT;}
-    else {cmd = BI;}
-    switch (cmd) {
-    case END: 
-      end(&file, args);
-      break;
-    case ADD: 
-      add(&file, args);
-      break;
-    case DROP:
-      drop(&file, args);
-      break;
-    case EDIT:
-      edit(&file, args);
-      break;
-    case LIST:
-      list(file, args);
-      break;
-    case SHOW:
-      show(file, args);
-      break;
-    case QUIT:
-      quit(&file);
-      break;
-    case BI:
-      bi();
-      break;
-    default:
-      break;
-    }
+  // loop
+  while (cmd[0] != 'q') {
+		if(read(0, cmd, 1) == 0) exit();
+		printf("%s\n", cmd);
   }
-  close(file.fd);
   exit();
   return 0;
 }

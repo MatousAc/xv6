@@ -193,9 +193,9 @@ UPROGS=\
 	$U/_cp\
 	$U/_mv\
 	$U/_motd\
+	$U/_more\
 	$U/_iotest\
 	$U/_xvEdit\
-	$U/_tryfork\
 	$U/_ezsh\
 	$U/_shutdown
 

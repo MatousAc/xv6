@@ -12,12 +12,15 @@ I will be focusing on implementing:
 4. displaying line number (*=*)
 
 ### Stretch Goals
-* -s this should condense multiple blank lines into just one  
-* xv this opens xvEdit "at" the current line in more (bottom line) ("at" in xvEdit means just print that line out an wait for commands)
+* **-s** this should condense multiple blank lines into just one  
+* **xv** this opens xvEdit "at" the current line in **more** (bottom line) ("at" in xvEdit means just print that line out and wait for commands)
+* going up a line **Shift+Enter/Up Arrow**
+* **f** fastforward. moves two pages forward instead of one
 
 ### Omissions
-* / I will not be implementing searching functionality in more.
+* **/** I will not be implementing searching functionality in **more**.
 * I will not implement other options to the command that I have not said I would explicitly support.
+* I do not plan to support viewing two files with one command.
 
 ### Tools
 WSL and it's implementation of more  

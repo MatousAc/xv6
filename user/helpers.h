@@ -4,6 +4,7 @@
 typedef struct File {
   char* filename;
   int fd;
+  int curLine;
   struct LinkedList* lines;
   int len;
   int edited;
