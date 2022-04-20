@@ -85,7 +85,6 @@ void gatherLines(File* file) {
     append(file->lines, line);
     file->len++;
   }
-  fprintf(2, "%d lines read from %s\n", file->len, file->filename);
 }
 
 int getLine(int fileptr, char line[]) {

@@ -79,6 +79,16 @@ sys_read(void)
 }
 
 int
+sys_steal(void)
+{
+  struct file *f;
+
+  if(argfd(0, 0, &f) < 0)
+    return -1;
+  return filesteal(f);
+}
+
+int
 sys_write(void)
 {
   struct file *f;

@@ -112,6 +112,24 @@ fileread(struct file *f, char *addr, int n)
   panic("fileread");
 }
 
+// Steal a char from file f.
+int
+filesteal(struct file *f)
+{
+  char r;
+
+  if(f->readable == 0)
+    return '\0';
+  if(f->type == FD_INODE){
+    ilock(f->ip);
+    if((r = steali(f->ip) != '\0'))
+      f->off += r;
+    iunlock(f->ip);
+    return r;
+  }
+  panic("filesteal");
+}
+
 //PAGEBREAK!
 // Write to file f.
 int

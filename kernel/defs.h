@@ -31,6 +31,7 @@ void            fileclose(struct file*);
 struct file*    filedup(struct file*);
 void            fileinit(void);
 int             fileread(struct file*, char*, int n);
+int            	filesteal(struct file*);
 int             filestat(struct file*, struct stat*);
 int             filewrite(struct file*, char*, int n);
 
@@ -50,6 +51,7 @@ int             namecmp(const char*, const char*);
 struct inode*   namei(char*);
 struct inode*   nameiparent(char*, char*);
 int             readi(struct inode*, char*, uint, uint);
+int							steali(struct inode*);
 void            stati(struct inode*, struct stat*);
 int             writei(struct inode*, char*, uint, uint);
 
@@ -116,6 +118,7 @@ void            scheduler(void) __attribute__((noreturn));
 void            sched(void);
 void            setproc(struct proc*);
 void            sleep(void*, struct spinlock*);
+// int 						steal(int); // FIXME?
 void            userinit(void);
 int             wait(void);
 void            wakeup(void*);

@@ -55,6 +55,7 @@ int main(int argc, char* argv[]) {
   } else { 
     // populate Linked List
     gatherLines(&file);
+    fprintf(2, "%d lines read from %s\n", file.len, file.filename);
   }
   close(file.fd);
 

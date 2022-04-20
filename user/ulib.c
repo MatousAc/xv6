@@ -67,6 +67,13 @@ gets(char *buf, int max)
   return buf;
 }
 
+// char*
+// stealconsolecc()
+// {
+//   FILE* f = open()
+//   return filesteal();
+// }
+
 int
 stat(const char *n, struct stat *st)
 {

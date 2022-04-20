@@ -475,6 +475,21 @@ readi(struct inode *ip, char *dst, uint off, uint n)
   return n;
 }
 
+//PAGEBREAK!
+// Read data from inode.
+// Caller must hold ip->lock.
+// like readi but just reads one character
+int
+steali(struct inode *ip)
+{
+  if(ip->type == T_DEV){
+    if(ip->major < 0 || ip->major >= NDEV || !devsw[ip->major].steal)
+      return -1;
+    return devsw[ip->major].steal(ip);
+  }
+  return -1;
+}
+
 // PAGEBREAK!
 // Write data to inode.
 // Caller must hold ip->lock.

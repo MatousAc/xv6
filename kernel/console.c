@@ -260,6 +260,8 @@ consoleread(struct inode *ip, char *dst, int n)
       break;
     }
     *dst++ = c;
+    *dst++ = '_';
+    --n;
     --n;
     if(c == '\n')
       break;
@@ -268,6 +270,29 @@ consoleread(struct inode *ip, char *dst, int n)
   ilock(ip);
 
   return target - n;
+}
+
+// like consoleread, but just gets one character
+int
+consolesteal(struct inode *ip)
+{
+  int c;
+
+  iunlock(ip);
+  acquire(&cons.lock);
+  while(input.r == input.w){
+    if(myproc()->killed){
+      release(&cons.lock);
+      ilock(ip);
+      return -1;
+    }
+    sleep(&input.r, &cons.lock);
+  }
+  c = input.buf[input.r++ % INPUT_BUF];
+  release(&cons.lock);
+  ilock(ip);
+
+  return (int)c;
 }
 
 int
@@ -292,6 +317,7 @@ consoleinit(void)
 
   devsw[CONSOLE].write = consolewrite;
   devsw[CONSOLE].read = consoleread;
+  devsw[CONSOLE].steal = consolesteal;
   cons.locking = 1;
 
   ioapicenable(IRQ_KBD, 0);

@@ -3,15 +3,20 @@
 #include "user/user.h"
 #include "LinkedList.c"
 #include "helpers.c"
+#define endLine file.curLine + terminal.height
 
-enum { FORWARD, FASTFORWARD, BACK, SCROLL, LINE, HELP, QUIT, BI };
+// enum { FORWARD, FASTFORWARD, BACK, SCROLL, LINE, HELP, QUIT, BI };
 
 void end(struct File* file, char* args);
 void add(struct File* file, char* args);
 void drop(struct File* file, char* args);
 void edit(struct File* file, char* args);
 void list(struct File file, char* args);
-void show(struct File file, char* args);
+void forward(struct File file);
+void fastforward(struct File file);
+void back(struct File file);
+void scroll(struct File file);
+void line(struct File file);
 void quit(struct File* file);
 void bi();
 
@@ -26,7 +31,9 @@ int main(int argc, char* argv[]) {
   }
 	
   // prep
-  char cmd[1] = "w";
+  char cmdstr[1] = "w";
+  char cmd = 'w';
+  // char cmdint = 0;
   // objects we will pass around
   // typedef struct Terminal {
 	// 	int width;
@@ -42,6 +49,7 @@ int main(int argc, char* argv[]) {
   struct File file;
   file.len = 0;
   file.edited = 0;
+  file.curLine = 0;
   file.filename = argv[1];
   file.lines = MakeLinkedList();
 
@@ -56,15 +64,55 @@ int main(int argc, char* argv[]) {
   close(file.fd);
 
   // loop
-  while (cmd[0] != 'q') {
-		if(read(0, cmd, 1) == 0) exit();
-		printf("%s\n", cmd);
+  while (cmdstr[0] != 'q') {
+    // cmdint = (char)steal(0);
+    // cmd = (char) cmdint;
+		// printf("cmd: %d = %c\r", cmdint, cmd);
+		if(read(0, cmdstr, 1) == 0) exit();
+    cmd = cmdstr[0];
+    printf("cmd: %c", cmd)
+		if (cmd == '\0') exit();
+		cmd = cmdstr[0];
+		switch (cmd) {
+		case ' ':
+			forward(file);
+			break;
+		case 'b':
+			back(file);
+			break;
+		case '\n':
+			scroll(file);
+			break;
+		case '=':
+			line(file);
+			break;
+		default:
+			break;
+		}
   }
   exit();
   return 0;
 }
 
 // commands
+void forward(struct File file){
+  printf("forward\r");
+}
+void fastforward(struct File file){
+  printf("fastforward\r");
+}
+void back(struct File file){
+  printf("back\r");
+}
+void scroll(struct File file){
+  printf("scroll\r");
+}
+void line(struct File file){
+  printf("line\r");
+}
+
+
+// old commands
 void end(struct File* file, char* args) {
   file->edited = 1;
   char* line = args;

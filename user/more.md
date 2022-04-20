@@ -16,6 +16,7 @@ I will be focusing on implementing:
 * **xv** this opens xvEdit "at" the current line in **more** (bottom line) ("at" in xvEdit means just print that line out and wait for commands)
 * going up a line **Shift+Enter/Up Arrow**
 * **f** fastforward. moves two pages forward instead of one
+* **h** help - shows how to use more
 
 ### Omissions
 * **/** I will not be implementing searching functionality in **more**.

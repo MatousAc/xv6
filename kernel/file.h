@@ -29,6 +29,7 @@ struct inode {
 // device functions
 struct devsw {
   int (*read)(struct inode*, char*, int);
+  int (*steal)(struct inode*);
   int (*write)(struct inode*, char*, int);
 };
 
