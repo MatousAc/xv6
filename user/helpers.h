@@ -5,10 +5,22 @@ typedef struct File {
   char* filename;
   int fd;
   int curLine;
+  int curCol;
   struct LinkedList* lines;
   int len;
   int edited;
 } File;
+
+typedef struct {
+  int width;
+  int height;
+} Terminal;
+
+typedef enum {
+  LEFT,
+  CENTER,
+  RIGHT
+} Alignment;
 
 // user confirm. 0 = yes, 1 = no
 int confirmation();

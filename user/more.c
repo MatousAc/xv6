@@ -13,14 +13,14 @@ void drop(struct File* file, char* args);
 void edit(struct File* file, char* args);
 void list(struct File file, char* args);
 
-void showPage(struct File file);
-void forward(struct File file);
-void fastforward(struct File file);
-void back(struct File file);
-void scroll(struct File file);
-void line(struct File file);
-void quit(struct File* file);
-void bi();
+void printPrompt(File file);
+void showPage(File file, Terminal terminal);
+void forward(File file, Terminal terminal);
+void fastforward(File file, Terminal terminal);
+void back(File file, Terminal terminal);
+void scroll(File file, Terminal terminal);
+void line(File file, Terminal terminal);
+void help(Terminal terminal);
 
 int main(int argc, char* argv[]) {
   // arg czeching
@@ -37,21 +37,13 @@ int main(int argc, char* argv[]) {
   char cmd = 'w';
   int cmdint = 101;
   // objects we will pass around
-  // typedef struct Terminal {
-	// 	int width;
-	// 	int height;
-	// } terminal;
-	struct stat {
-    short type;
-    int dev;
-    uint ino;
-    short nlink;
-    uint size;
-  };
+  Terminal terminal;
+  terminal.width = 76;
+  terminal.height = 25;
   struct File file;
   file.len = 0;
   file.edited = 0;
-  file.curLine = 0;
+  file.curLine = 1; // line displayed at bottoms
   file.filename = argv[1];
   file.lines = MakeLinkedList();
 
@@ -66,27 +58,33 @@ int main(int argc, char* argv[]) {
   close(file.fd);
 
   // loop
-  showPage(file);
-  while (cmdint != 113) {
+  showPage(file, terminal);
+  while (cmd != 'q' && cmd != 'Q') {
     cmdint = steal(0);
     cmd = (char) cmdint;
 		// printf("cmd: %d = %c.\n", cmdint, cmd);
 		if (cmd == '\0') exit();
 		switch (cmd) {
 		case ' ':
-			forward(file);
+			forward(file, terminal);
+      showPage(file, terminal);
 			break;
     case 'f':
-			fastforward(file);
+			fastforward(file, terminal);
+      showPage(file, terminal);
 			break;
 		case 'b':
-			back(file);
+			back(file, terminal);
+      showPage(file, terminal);
 			break;
 		case 'e':
-			scroll(file);
+			scroll(file, terminal);
 			break;
 		case '=':
-			line(file);
+			line(file, terminal);
+			break;
+    case 'h':
+			help(terminal);
 			break;
 		default:
 			break;
@@ -97,25 +95,63 @@ int main(int argc, char* argv[]) {
 }
 
 // commands
-void forward(struct File file){
-  printf("forward    \r");
+void forward(File file, Terminal terminal){
+  char* msg = "... forward";
+  printpad(terminal.width, ' ', msg, LEFT, 0);
 }
-void fastforward(struct File file){
-  printf("fastforward\r");
+void fastforward(File file, Terminal terminal){
+  char* msg = "... fastforward";
+  printpad(terminal.width, ' ', msg, LEFT, 0);
 }
-void back(struct File file){
-  printf("back       \r");
+void back(File file, Terminal terminal){
+  char* msg = "... back";
+  printpad(terminal.width, ' ', msg, LEFT, 0);
 }
-void scroll(struct File file){
-  printf("scroll     \r");
+void scroll(File file, Terminal terminal){
+  char* msg = "... scroll";
+  printpad(terminal.width, ' ', msg, LEFT, 0);
 }
-void line(struct File file){
-  printf("line       \r");
+void line(File file, Terminal terminal){
+  char* msg = "... line";
+  printpad(terminal.width, ' ', msg, LEFT, 0);
+}
+void help(Terminal terminal) {
+  printpad(terminal.width, '-', "-", LEFT, 1);
+  printf("<space>                 Display next k lines of text [current screen size]\n");
+  printf("z                       Display next k lines of text [current screen size]*\n");
+  printf("<return>                Display next k lines of text [1]*\n");
+  printf("e                       Display next k lines of text [1]*\n");
+  // printf("d or ctrl-D             Scroll k lines [current scroll size, initially 11]*\n");
+  printf("q or Q or <interrupt>   Exit from more\n");
+  printf("f                       Skip forward 1 screenful of text\n");
+  printf("b or B                  Skip backwards 1 screenful of text\n");
+  printf("=                       Display current line number\n");
+  // printf("v                       Start up /usr/bin/vi at current line\n");
+  printf("l or L                  Redraw screen\n");
+  // printf(".                       Repeat previous command\n");
+  printpad(terminal.width, '-', "-", LEFT, 1);
 }
 
 // help
-void showPage(struct File file) {
-  
+void printPrompt(File file) {
+  printf("\n--MORE--(%d%%)", 100 * file.curLine / file.len);
+  printf("[Press space to continue, 'q' to quit.]\r");
+}
+
+void showPage(File file, Terminal terminal) {
+  // struct Node* cur = file.lines->head->next;
+  struct Node* curNode = (lineAt(file.lines, file.curLine))->prev;
+  int termLine = 3; // num lines we've written to the terminal so far
+  int lineLen = 0;
+  while (termLine < terminal.height) {
+    lineLen = strlen(curNode->data);
+    termLine += (lineLen / (terminal.width)) + 1;
+    printf("%s\n", curNode->data);
+    curNode = curNode->next;
+    file.curLine ++;
+    if (curNode == file.lines->tail) exit();
+  }
+  printPrompt(file);  
 }
 
 // old commands
@@ -258,6 +294,3 @@ void quit(struct File* file) {
   return;
 }
 
-void bi() {
-  fprintf(2, "bad input\n");
-}

@@ -1,7 +1,7 @@
 00000000 .text
 00001258 .rodata
-0000135c .eh_frame
-00001944 .data
+00001360 .eh_frame
+00001948 .data
 00001960 .bss
 00000000 .comment
 00000000 .debug_aranges
@@ -12,13 +12,13 @@
 00000000 .debug_loc
 00000000 .debug_ranges
 00000000 sh.c
-00001960 buf.1080
+00001960 buf.1082
 00000000 ulib.c
 00000000 printf.c
 00000dd0 printint.constprop.1
-00001348 digits.1053
+0000134c digits.1053
 00000e60 vprintf.constprop.0
-00001348 digits
+0000134c digits
 00000000 umalloc.c
 000019c4 freep
 000019c8 base
@@ -37,7 +37,7 @@
 00000460 gettoken
 00001160 malloc
 00000daa sleep
-0000194c whitespace
+00001950 whitespace
 00000310 fork1
 000009a0 nulterminate
 00000d22 pipe
@@ -52,7 +52,7 @@
 00000910 parseblock
 00000d52 exec
 00000d1a wait
-00001944 symbols
+00001948 symbols
 00000d2a read
 000006f0 parseexec
 00000d6a unlink
@@ -60,7 +60,7 @@
 00000d0a fork
 00000da2 sbrk
 00000db2 uptime
-00001952 __bss_start
+00001956 __bss_start
 00000b70 memset
 00000000 main
 00000dba cpuhalt
@@ -69,7 +69,7 @@
 000003b0 pipecmd
 00000360 redircmd
 00000c50 stat
-00001952 _edata
+00001956 _edata
 000019d0 _end
 00000d7a link
 00000d12 exit

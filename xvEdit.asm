@@ -1575,6 +1575,7 @@ void printl(int lineNum, char* line) {
      c9c:	6a 02                	push   $0x2
      c9e:	e8 dd 0b 00 00       	call   1880 <fprintf>
      ca3:	83 c4 10             	add    $0x10,%esp
+}
      ca6:	c9                   	leave  
      ca7:	c3                   	ret    
      ca8:	90                   	nop
@@ -1586,6 +1587,7 @@ void printl(int lineNum, char* line) {
      cb9:	6a 02                	push   $0x2
      cbb:	e8 c0 0b 00 00       	call   1880 <fprintf>
      cc0:	83 c4 10             	add    $0x10,%esp
+}
      cc3:	c9                   	leave  
      cc4:	c3                   	ret    
      cc5:	8d 76 00             	lea    0x0(%esi),%esi
@@ -1596,6 +1598,7 @@ void printl(int lineNum, char* line) {
      cd1:	6a 02                	push   $0x2
      cd3:	e8 a8 0b 00 00       	call   1880 <fprintf>
      cd8:	83 c4 10             	add    $0x10,%esp
+}
      cdb:	c9                   	leave  
      cdc:	c3                   	ret    
      cdd:	8d 76 00             	lea    0x0(%esi),%esi

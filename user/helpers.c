@@ -177,3 +177,28 @@ void printl(int lineNum, char* line) {
   else
     fprintf(2, "%d: %s\n", lineNum, line);
 }
+
+// prints the string with padding of a certain character
+void printpad(int pad, char padChar, char* str, int alignment, int endLine) {
+  int len = strlen(str);
+  int i = pad - len;
+  if (alignment == LEFT) {
+    printf("%s", str);
+    for (; i > 0; i--)
+      printf("%c", padChar);
+  } else if (alignment == RIGHT) {
+    for (; i > 0; i--)
+      printf("%c", padChar);
+    printf("%s", str);
+  } else if (alignment == CENTER) {
+    int half = i / 2;
+    for (; i > 0; i--) {
+      printf("%c", padChar);
+      if (i == half)
+        printf("%s", str);
+    }
+  }
+  if (endLine) {
+    printf("\n");
+  }
+}
