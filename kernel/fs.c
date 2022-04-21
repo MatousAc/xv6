@@ -485,7 +485,8 @@ steali(struct inode *ip)
   if(ip->type == T_DEV){
     if(ip->major < 0 || ip->major >= NDEV || !devsw[ip->major].steal)
       return -1;
-    return devsw[ip->major].steal(ip);
+    int r = devsw[ip->major].steal(ip);
+    return r;
   }
   return -1;
 }

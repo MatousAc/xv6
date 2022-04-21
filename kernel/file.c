@@ -116,14 +116,15 @@ fileread(struct file *f, char *addr, int n)
 int
 filesteal(struct file *f)
 {
-  char r;
+  int r;
 
   if(f->readable == 0)
-    return '\0';
+    return -1;
   if(f->type == FD_INODE){
     ilock(f->ip);
-    if((r = steali(f->ip) != '\0'))
-      f->off += r;
+    // if((r = steali(f->ip) != -1))
+    //   f->off += r;
+    r = steali(f->ip);
     iunlock(f->ip);
     return r;
   }

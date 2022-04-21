@@ -31,3 +31,15 @@ Linux Manual/man command:
 https://man7.org/linux/man-pages/man1/more.1.html  
 Geeks for Geeks:  
 https://www.geeksforgeeks.org/more-command-in-linux-with-examples/  
+
+
+### Adding a SysCall
+You have to edit,
+* user.h
+* syscall.c
+* sysfile.c
+* file.c
+* fs.c
+* file.h
+* console.c
+

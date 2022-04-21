@@ -12,6 +12,8 @@ void add(struct File* file, char* args);
 void drop(struct File* file, char* args);
 void edit(struct File* file, char* args);
 void list(struct File file, char* args);
+
+void showPage(struct File file);
 void forward(struct File file);
 void fastforward(struct File file);
 void back(struct File file);
@@ -31,9 +33,9 @@ int main(int argc, char* argv[]) {
   }
 	
   // prep
-  char cmdstr[1] = "w";
+  // char cmdstr[4] = "w";
   char cmd = 'w';
-  // char cmdint = 0;
+  int cmdint = 101;
   // objects we will pass around
   // typedef struct Terminal {
 	// 	int width;
@@ -64,23 +66,23 @@ int main(int argc, char* argv[]) {
   close(file.fd);
 
   // loop
-  while (cmdstr[0] != 'q') {
-    // cmdint = (char)steal(0);
-    // cmd = (char) cmdint;
-		// printf("cmd: %d = %c\r", cmdint, cmd);
-		if(read(0, cmdstr, 1) == 0) exit();
-    cmd = cmdstr[0];
-    printf("cmd: %c", cmd)
+  showPage(file);
+  while (cmdint != 113) {
+    cmdint = steal(0);
+    cmd = (char) cmdint;
+		// printf("cmd: %d = %c.\n", cmdint, cmd);
 		if (cmd == '\0') exit();
-		cmd = cmdstr[0];
 		switch (cmd) {
 		case ' ':
 			forward(file);
 			break;
+    case 'f':
+			fastforward(file);
+			break;
 		case 'b':
 			back(file);
 			break;
-		case '\n':
+		case 'e':
 			scroll(file);
 			break;
 		case '=':
@@ -96,21 +98,25 @@ int main(int argc, char* argv[]) {
 
 // commands
 void forward(struct File file){
-  printf("forward\r");
+  printf("forward    \r");
 }
 void fastforward(struct File file){
   printf("fastforward\r");
 }
 void back(struct File file){
-  printf("back\r");
+  printf("back       \r");
 }
 void scroll(struct File file){
-  printf("scroll\r");
+  printf("scroll     \r");
 }
 void line(struct File file){
-  printf("line\r");
+  printf("line       \r");
 }
 
+// help
+void showPage(struct File file) {
+  
+}
 
 // old commands
 void end(struct File* file, char* args) {
