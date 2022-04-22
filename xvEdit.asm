@@ -675,8 +675,8 @@ int isDigit(char c) {
 }
      597:	5d                   	pop    %ebp
   if (c >= '0' && c <= '9') return 1;
-     598:	83 e8 31             	sub    $0x31,%eax
-     59b:	3c 07                	cmp    $0x7,%al
+     598:	83 e8 30             	sub    $0x30,%eax
+     59b:	3c 09                	cmp    $0x9,%al
      59d:	0f 96 c0             	setbe  %al
      5a0:	0f b6 c0             	movzbl %al,%eax
 }
@@ -1722,11 +1722,11 @@ void gatherLinesSized(struct File* file, Terminal terminal) {
      d56:	81 ec 0c 04 00 00    	sub    $0x40c,%esp
      d5c:	8b 75 0c             	mov    0xc(%ebp),%esi
      d5f:	8b 7d 08             	mov    0x8(%ebp),%edi
-  int numSplits = 0;
-  char line[MAXLINESIZE];
   while (getLine(file->fd, line)) {
     int cols = 0;
-    for (; strlen(line + cols) > terminal.width; cols += terminal.width) {
+    // printf("line:\n %s\n", line + cols);
+    // printf("strlen(line + cols) = %d\n", strlen(line + cols));
+    for (; strlen(line + cols) > terminal.width;) {
       char piece[terminal.width + 1]; // make room for null terminator
      d62:	8d 46 10             	lea    0x10(%esi),%eax
      d65:	89 f3                	mov    %esi,%ebx
@@ -1747,7 +1747,7 @@ void gatherLinesSized(struct File* file, Terminal terminal) {
       char piece[terminal.width + 1]; // make room for null terminator
      d98:	8b 85 ec fb ff ff    	mov    -0x414(%ebp),%eax
      d9e:	8d 4b 01             	lea    0x1(%ebx),%ecx
-    for (; strlen(line + cols) > terminal.width; cols += terminal.width) {
+    for (; strlen(line + cols) > terminal.width;) {
      da1:	89 a5 f4 fb ff ff    	mov    %esp,-0x40c(%ebp)
       char piece[terminal.width + 1]; // make room for null terminator
      da7:	c1 e0 04             	shl    $0x4,%eax
@@ -1771,7 +1771,7 @@ void gatherLinesSized(struct File* file, Terminal terminal) {
       file->len++;
      dd6:	83 47 10 01          	addl   $0x1,0x10(%edi)
      dda:	8b a5 f4 fb ff ff    	mov    -0x40c(%ebp),%esp
-    for (; strlen(line + cols) > terminal.width; cols += terminal.width) {
+    for (; strlen(line + cols) > terminal.width;) {
      de0:	83 ec 0c             	sub    $0xc,%esp
      de3:	56                   	push   %esi
      de4:	e8 37 08 00 00       	call   1620 <strlen>
@@ -1779,6 +1779,9 @@ void gatherLinesSized(struct File* file, Terminal terminal) {
      dec:	39 d8                	cmp    %ebx,%eax
      dee:	77 a8                	ja     d98 <gatherLinesSized+0x48>
       numSplits++;
+      cols += terminal.width;
+      // printf("line:\n %s\n", line + cols);
+      // printf("strlen(line + cols) = %d\n", strlen(line + cols));
     }
     append(file->lines, line + cols);
      df0:	8b 47 0c             	mov    0xc(%edi),%eax

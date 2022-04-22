@@ -110,12 +110,13 @@ void gatherLinesSized(struct File* file, Terminal terminal) {
   char line[MAXLINESIZE];
   while (getLine(file->fd, line)) {
     int cols = 0;
-    for (; strlen(line + cols) > terminal.width; cols += terminal.width) {
+    for (; strlen(line + cols) > terminal.width;) {
       char piece[terminal.width + 1]; // make room for null terminator
       safestrcpy(piece, line + cols, terminal.width + 1); 
       append(file->lines, piece);
       file->len++;
       numSplits++;
+      cols += terminal.width;
     }
     append(file->lines, line + cols);
     file->len++;

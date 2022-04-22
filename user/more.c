@@ -69,32 +69,21 @@ int main(int argc, char* argv[]) {
     if (cmd == '.') cmd = previous;
     else previous = cmd;
 		switch (cmd) {
-		case ' ':
-			forward(&file, terminal);
-			break;
+		case ' ': forward(&file, terminal); break;
     case 'f':
-    case 'F':
-			skip(&file, terminal, numArg);
-			break;
+    case 'F': skip(&file, terminal, numArg); break;
 		case 'b':
-    case 'B':
-			back(&file, terminal, numArg);
-			break;
+    case 'B': back(&file, terminal, numArg); break;
 		case 's':
 		case 'S':
 		case 'e':
-		case 'E':
-			scroll(&file, terminal, numArg);
-			break;
-		case '=':
-			line(file, terminal);
-			break;
+		case 'E': scroll(&file, terminal, numArg); break;
+		case '=': line(file, terminal); break;
     case 'h':
-    case 'H':
-			help(terminal);
-			break;
-		default:
-			break;
+    case 'H': help(terminal); printPrompt(file); break;
+    case 'l':
+    case 'L': showPage(file, terminal); break;
+		default : break;
 		}
     // here we keep track of number arguments
     collectNum(cmd, &numCollector);
@@ -146,16 +135,16 @@ void help(Terminal terminal) {
   printf("<int> f,F     Skip forward <int> screens [1]\n");
   printf("=             Display current line number\n");
   printf(".             Repeat previous command\n");
+  printf("l or L        Redraw screen\n");
   printf("q or Q        Exit from more\n");
   // printf("d or ctrl-D   Scroll k lines [current scroll size, initially 11]*\n");
   // printf("v             Start up /usr/bin/vi at current line\n");
-  // printf("l or L        Redraw screen\n");
   printpad(terminal.width, '-', "-", LEFT, 1);
 }
 
 // help
 void printPrompt(File file) {
-  printf("\n--MORE--(%d%%)", 100 * file.curLine / file.len);
+  printf("--MORE--(%d%%)", 100 * file.curLine / file.len);
   printf("[Press space to continue, 'q' to quit.]\r");
 }
 
@@ -166,7 +155,7 @@ void showPage(File file, Terminal terminal) {
   while (termLine < TERMH_ADJ) {
     if (firstLine) {
       firstLine = 0;
-      printpad(terminal.width, ' ', curNode->data, LEFT, 0);
+      printpad(terminal.width, ' ', curNode->data, LEFT, 1);
     } else printf("%s\n", curNode->data);
     curNode = curNode->next;
     termLine++;
@@ -182,7 +171,7 @@ void showLines(File file, Terminal terminal, int numLines) {
   while (numLines-- > 0) {
     if (firstLine) {
       firstLine = 0;
-      printpad(terminal.width, ' ', curNode->data, LEFT, 0);
+      printpad(terminal.width, ' ', curNode->data, LEFT, 1);
     } else printf("%s\n", curNode->data);
     curNode = curNode->next;
     if (curNode == file.lines->tail) exit();
