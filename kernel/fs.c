@@ -478,7 +478,7 @@ readi(struct inode *ip, char *dst, uint off, uint n)
 //PAGEBREAK!
 // Read data from inode.
 // Caller must hold ip->lock.
-// like readi but just reads one character
+// like readi but just reads one character from console
 int
 steali(struct inode *ip)
 {

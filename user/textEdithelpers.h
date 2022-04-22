@@ -41,7 +41,7 @@ void unline(char* str); // removes trailng newline
 // splits the file's lines up it they exceed terminal wicth
 // returns array mapping current line numbers to old line numbers
 // int* gatherLineSized(struct File* file, Terminal terminal);
-void gatherLinesSized(struct File* file, Terminal terminal);
+void gatherLineSized(struct File* file, Terminal terminal);
 
 // returns node holing line @ position pos
 Node* lineAt(struct LinkedList* list, int pos);

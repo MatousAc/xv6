@@ -187,6 +187,8 @@ struct {
 } input;
 
 #define C(x)  ((x)-'@')  // Control-x
+// this
+int singleCharMode = 0;
 
 void
 consoleintr(int (*getc)(void))
@@ -219,6 +221,10 @@ consoleintr(int (*getc)(void))
         input.buf[input.e++ % INPUT_BUF] = c;
         consputc(c);
         if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
+          input.w = input.e;
+          wakeup(&input.r);
+        } // for getting a single character from the console:
+        else if(singleCharMode && c > 0) {
           input.w = input.e;
           wakeup(&input.r);
         }
@@ -274,55 +280,19 @@ consoleread(struct inode *ip, char *dst, int n)
 int
 consolesteal(struct inode *ip)
 {
-  // int c = 1;
-  // int n = 1;
-  // int target = n;
-  // iunlock(ip);
-  // acquire(&cons.lock);
-
-  // while(c < 21) {
-  //   if(input.r == input.w){
-  //     if(myproc()->killed){
-  //       release(&cons.lock);
-  //       ilock(ip);
-  //       return 100;
-  //     }
-  //   sleep(&input.r, &cons.lock);
-  //   }
-  //   c = input.buf[input.r++ % INPUT_BUF];
-  //   if(c == C('D')){  // EOF
-  //     if(n < target){
-  //       // Save ^D for next time, to make sure
-  //       // caller gets a 0-byte result.
-  //       input.r--;
-  //     }
-  //     break;
-  //   }
-  //   --n;
-  //   if(c != 1)
-  //     break;
-  // }
-
-  // release(&cons.lock);
-  // ilock(ip);
-  // return c;
-  
+  singleCharMode = 1;
   int c = 1;
   iunlock(ip);
   acquire(&cons.lock);
-  // cprintf("outside");
-  // cprintf("input.r = %d", input.r);
-  // cprintf("input.w = %d", input.w);
-  // while(input.r == input.w){
   if(input.r == input.w){
     if(myproc()->killed){
       release(&cons.lock);
       ilock(ip);
       return -1;
     }
-    // cprintf("before sleep");
+    singleCharMode = 1;
     sleep(&input.r, &cons.lock);
-    // cprintf("after sleep");
+    singleCharMode = 0;
   }
   c = input.buf[input.r++ % INPUT_BUF];
   release(&cons.lock);

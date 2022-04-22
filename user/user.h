@@ -8,7 +8,7 @@ int wait(void);
 int pipe(int*);
 int write(int, const void*, int);
 int read(int, void*, int);
-int steal(int);
+int steal(int); // only pass in 0 !!
 int close(int);
 int kill(int);
 int exec(char*, char**);

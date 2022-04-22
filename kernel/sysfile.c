@@ -78,12 +78,15 @@ sys_read(void)
   return fileread(f, p, n);
 }
 
+// used to read single character from console
 int
 sys_steal(void)
 {
   struct file *f;
 
-  if(argfd(0, 0, &f) < 0)
+  // the != 0 sets a hard limit on 
+  // only using the syscall for the console
+  if(argfd(0, 0, &f) != 0)
     return -1;
   return filesteal(f);
 }

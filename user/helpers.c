@@ -17,6 +17,8 @@ int getLine(int fileptr, char line[]) {
   return 1;
 }
 
+char consGetChar() {return (char) steal(0);}
+
 // str ops
 int find(char* str, char c) {
   for (int i = 0; i < strlen(str); i++)
@@ -48,6 +50,13 @@ safestrcpy(char *s, const char *t, int n)
 }
 
 // standard str helps
+int isDigit(char c) {
+  if (c >= '0' && c <= '9') return 1;
+  else return 0;
+}
+int ctoi(char c) {
+  return ((int) c) - 48;
+}
 int negatoi(char* str) {
   if (str[0] == '-') {
     substr(str, str, 1, strlen(str));

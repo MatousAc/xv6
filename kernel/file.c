@@ -112,7 +112,7 @@ fileread(struct file *f, char *addr, int n)
   panic("fileread");
 }
 
-// Steal a char from file f.
+// used to read a single character from console
 int
 filesteal(struct file *f)
 {
@@ -122,8 +122,6 @@ filesteal(struct file *f)
     return -1;
   if(f->type == FD_INODE){
     ilock(f->ip);
-    // if((r = steali(f->ip) != -1))
-    //   f->off += r;
     r = steali(f->ip);
     iunlock(f->ip);
     return r;

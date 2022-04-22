@@ -111,9 +111,8 @@ void gatherLinesSized(struct File* file, Terminal terminal) {
   while (getLine(file->fd, line)) {
     int cols = 0;
     for (; strlen(line + cols) > terminal.width; cols += terminal.width) {
-      printf("line:\n%s\n\n", line + cols);
-      char piece[terminal.width];
-      safestrcpy(piece, line + cols, terminal.width);
+      char piece[terminal.width + 1]; // make room for null terminator
+      safestrcpy(piece, line + cols, terminal.width + 1); 
       append(file->lines, piece);
       file->len++;
       numSplits++;
