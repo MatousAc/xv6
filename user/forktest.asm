@@ -5,6 +5,12 @@ user/_forktest:     file format elf32-i386
 Disassembly of section .text:
 
 00000000 <main>:
+  printf("fork test OK\n");
+}
+
+int
+main(void)
+{
    0:	8d 4c 24 04          	lea    0x4(%esp),%ecx
    4:	83 e4 f0             	and    $0xfffffff0,%esp
    7:	ff 71 fc             	pushl  -0x4(%ecx)
@@ -12,18 +18,22 @@ Disassembly of section .text:
    b:	89 e5                	mov    %esp,%ebp
    d:	51                   	push   %ecx
    e:	83 ec 04             	sub    $0x4,%esp
+  forktest();
   11:	e8 6a 00 00 00       	call   80 <forktest>
+  exit();
   16:	e8 87 03 00 00       	call   3a2 <exit>
   1b:	66 90                	xchg   %ax,%ax
   1d:	66 90                	xchg   %ax,%ax
   1f:	90                   	nop
 
 00000020 <fprintf>:
+{
   20:	55                   	push   %ebp
   21:	89 e5                	mov    %esp,%ebp
   23:	53                   	push   %ebx
   24:	83 ec 10             	sub    $0x10,%esp
   27:	8b 5d 0c             	mov    0xc(%ebp),%ebx
+  write(fd, s, strlen(s));
   2a:	53                   	push   %ebx
   2b:	e8 a0 01 00 00       	call   1d0 <strlen>
   30:	83 c4 0c             	add    $0xc,%esp
@@ -31,6 +41,7 @@ Disassembly of section .text:
   34:	53                   	push   %ebx
   35:	ff 75 08             	pushl  0x8(%ebp)
   38:	e8 8d 03 00 00       	call   3ca <write>
+}
   3d:	83 c4 10             	add    $0x10,%esp
   40:	8b 5d fc             	mov    -0x4(%ebp),%ebx
   43:	c9                   	leave  
@@ -39,11 +50,13 @@ Disassembly of section .text:
   49:	8d bc 27 00 00 00 00 	lea    0x0(%edi,%eiz,1),%edi
 
 00000050 <printf>:
+{
   50:	55                   	push   %ebp
   51:	89 e5                	mov    %esp,%ebp
   53:	53                   	push   %ebx
   54:	83 ec 10             	sub    $0x10,%esp
   57:	8b 5d 08             	mov    0x8(%ebp),%ebx
+  write(fd, s, strlen(s));
   5a:	53                   	push   %ebx
   5b:	e8 70 01 00 00       	call   1d0 <strlen>
   60:	83 c4 0c             	add    $0xc,%esp
@@ -51,6 +64,7 @@ Disassembly of section .text:
   64:	53                   	push   %ebx
   65:	6a 01                	push   $0x1
   67:	e8 5e 03 00 00       	call   3ca <write>
+}
   6c:	83 c4 10             	add    $0x10,%esp
   6f:	8b 5d fc             	mov    -0x4(%ebp),%ebx
   72:	c9                   	leave  
@@ -59,42 +73,57 @@ Disassembly of section .text:
   7a:	8d bf 00 00 00 00    	lea    0x0(%edi),%edi
 
 00000080 <forktest>:
+{
   80:	55                   	push   %ebp
   81:	89 e5                	mov    %esp,%ebp
   83:	53                   	push   %ebx
+  for(n=0; n<N; n++){
   84:	31 db                	xor    %ebx,%ebx
+{
   86:	83 ec 10             	sub    $0x10,%esp
+  printf("fork test\n");
   89:	68 54 04 00 00       	push   $0x454
   8e:	e8 bd ff ff ff       	call   50 <printf>
   93:	83 c4 10             	add    $0x10,%esp
   96:	eb 15                	jmp    ad <forktest+0x2d>
   98:	90                   	nop
   99:	8d b4 26 00 00 00 00 	lea    0x0(%esi,%eiz,1),%esi
+    if(pid == 0)
   a0:	74 70                	je     112 <forktest+0x92>
+  for(n=0; n<N; n++){
   a2:	83 c3 01             	add    $0x1,%ebx
   a5:	81 fb e8 03 00 00    	cmp    $0x3e8,%ebx
   ab:	74 43                	je     f0 <forktest+0x70>
+    pid = fork();
   ad:	e8 e8 02 00 00       	call   39a <fork>
+    if(pid < 0)
   b2:	85 c0                	test   %eax,%eax
   b4:	79 ea                	jns    a0 <forktest+0x20>
+  for(; n > 0; n--){
   b6:	85 db                	test   %ebx,%ebx
   b8:	74 14                	je     ce <forktest+0x4e>
   ba:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
+    if(wait() < 0){
   c0:	e8 e5 02 00 00       	call   3aa <wait>
   c5:	85 c0                	test   %eax,%eax
   c7:	78 4e                	js     117 <forktest+0x97>
+  for(; n > 0; n--){
   c9:	83 eb 01             	sub    $0x1,%ebx
   cc:	75 f2                	jne    c0 <forktest+0x40>
+  if(wait() != -1){
   ce:	e8 d7 02 00 00       	call   3aa <wait>
   d3:	83 f8 ff             	cmp    $0xffffffff,%eax
   d6:	75 51                	jne    129 <forktest+0xa9>
+  printf("fork test OK\n");
   d8:	83 ec 0c             	sub    $0xc,%esp
   db:	68 86 04 00 00       	push   $0x486
   e0:	e8 6b ff ff ff       	call   50 <printf>
+}
   e5:	8b 5d fc             	mov    -0x4(%ebp),%ebx
   e8:	c9                   	leave  
   e9:	c3                   	ret    
   ea:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
+  write(fd, s, strlen(s));
   f0:	83 ec 0c             	sub    $0xc,%esp
   f3:	68 94 04 00 00       	push   $0x494
   f8:	e8 d3 00 00 00       	call   1d0 <strlen>
@@ -103,12 +132,17 @@ Disassembly of section .text:
  101:	68 94 04 00 00       	push   $0x494
  106:	6a 01                	push   $0x1
  108:	e8 bd 02 00 00       	call   3ca <write>
+    exit();
  10d:	e8 90 02 00 00       	call   3a2 <exit>
+      exit();
  112:	e8 8b 02 00 00       	call   3a2 <exit>
+      printf("wait stopped early\n");
  117:	83 ec 0c             	sub    $0xc,%esp
  11a:	68 5f 04 00 00       	push   $0x45f
  11f:	e8 2c ff ff ff       	call   50 <printf>
+      exit();
  124:	e8 79 02 00 00       	call   3a2 <exit>
+  write(fd, s, strlen(s));
  129:	83 ec 0c             	sub    $0xc,%esp
  12c:	68 73 04 00 00       	push   $0x473
  131:	e8 9a 00 00 00       	call   1d0 <strlen>
@@ -117,6 +151,7 @@ Disassembly of section .text:
  13a:	68 73 04 00 00       	push   $0x473
  13f:	6a 02                	push   $0x2
  141:	e8 84 02 00 00       	call   3ca <write>
+    exit();
  146:	e8 57 02 00 00       	call   3a2 <exit>
  14b:	66 90                	xchg   %ax,%ax
  14d:	66 90                	xchg   %ax,%ax
@@ -476,6 +511,7 @@ atoi(const char *s)
  369:	8d b4 26 00 00 00 00 	lea    0x0(%esi,%eiz,1),%esi
 
 00000370 <memmove>:
+
 
 void*
 memmove(void *vdst, const void *vsrc, int n)

@@ -414,6 +414,7 @@ atoi(const char *s)
 
 00000280 <memmove>:
 
+
 void*
 memmove(void *vdst, const void *vsrc, int n)
 {
@@ -599,6 +600,12 @@ SYSCALL(cpuhalt)
  36e:	66 90                	xchg   %ax,%ax
 
 00000370 <printint.constprop.1>:
+  for (i = 0; i < (sizeof(uint) * 2); i++, x <<= 4)
+    putc(fd, digits[x >> (sizeof(uint) * 8 - 4)]);
+}
+
+static void
+printint(int fd, int xx, int base, int sgn)
  370:	55                   	push   %ebp
  371:	89 e5                	mov    %esp,%ebp
  373:	57                   	push   %edi
@@ -606,32 +613,54 @@ SYSCALL(cpuhalt)
  375:	53                   	push   %ebx
  376:	89 d6                	mov    %edx,%esi
  378:	83 ec 3c             	sub    $0x3c,%esp
+  char buf[16];
+  int i, neg;
+  uint x;
+
+  neg = 0;
+  if(sgn && xx < 0){
  37b:	85 c0                	test   %eax,%eax
  37d:	79 71                	jns    3f0 <printint.constprop.1+0x80>
  37f:	83 e1 01             	and    $0x1,%ecx
  382:	74 6c                	je     3f0 <printint.constprop.1+0x80>
+    neg = 1;
+    x = -xx;
  384:	f7 d8                	neg    %eax
+    neg = 1;
  386:	c7 45 c4 01 00 00 00 	movl   $0x1,-0x3c(%ebp)
+  } else {
+    x = xx;
+  }
+
+  i = 0;
  38d:	31 c9                	xor    %ecx,%ecx
  38f:	8d 5d d7             	lea    -0x29(%ebp),%ebx
  392:	eb 06                	jmp    39a <printint.constprop.1+0x2a>
  394:	8d 74 26 00          	lea    0x0(%esi,%eiz,1),%esi
+  do{
+    buf[i++] = digits[x % base];
  398:	89 f9                	mov    %edi,%ecx
  39a:	31 d2                	xor    %edx,%edx
  39c:	8d 79 01             	lea    0x1(%ecx),%edi
  39f:	f7 f6                	div    %esi
  3a1:	0f b6 92 14 08 00 00 	movzbl 0x814(%edx),%edx
+  }while((x /= base) != 0);
  3a8:	85 c0                	test   %eax,%eax
+    buf[i++] = digits[x % base];
  3aa:	88 14 3b             	mov    %dl,(%ebx,%edi,1)
+  }while((x /= base) != 0);
  3ad:	75 e9                	jne    398 <printint.constprop.1+0x28>
+  if(neg)
  3af:	8b 45 c4             	mov    -0x3c(%ebp),%eax
  3b2:	85 c0                	test   %eax,%eax
  3b4:	74 08                	je     3be <printint.constprop.1+0x4e>
+    buf[i++] = '-';
  3b6:	c6 44 3d d8 2d       	movb   $0x2d,-0x28(%ebp,%edi,1)
  3bb:	8d 79 02             	lea    0x2(%ecx),%edi
  3be:	8d 74 3d d7          	lea    -0x29(%ebp,%edi,1),%esi
  3c2:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
  3c8:	0f b6 06             	movzbl (%esi),%eax
+  write(fd, &c, 1);
  3cb:	83 ec 04             	sub    $0x4,%esp
  3ce:	83 ee 01             	sub    $0x1,%esi
  3d1:	6a 01                	push   $0x1
@@ -639,9 +668,13 @@ SYSCALL(cpuhalt)
  3d4:	6a 01                	push   $0x1
  3d6:	88 45 d7             	mov    %al,-0x29(%ebp)
  3d9:	e8 fc fe ff ff       	call   2da <write>
+
+  while(--i >= 0)
  3de:	83 c4 10             	add    $0x10,%esp
  3e1:	39 de                	cmp    %ebx,%esi
  3e3:	75 e3                	jne    3c8 <printint.constprop.1+0x58>
+    putc(fd, buf[i]);
+}
  3e5:	8d 65 f4             	lea    -0xc(%ebp),%esp
  3e8:	5b                   	pop    %ebx
  3e9:	5e                   	pop    %esi
@@ -649,11 +682,13 @@ SYSCALL(cpuhalt)
  3eb:	5d                   	pop    %ebp
  3ec:	c3                   	ret    
  3ed:	8d 76 00             	lea    0x0(%esi),%esi
+  neg = 0;
  3f0:	c7 45 c4 00 00 00 00 	movl   $0x0,-0x3c(%ebp)
  3f7:	eb 94                	jmp    38d <printint.constprop.1+0x1d>
  3f9:	8d b4 26 00 00 00 00 	lea    0x0(%esi,%eiz,1),%esi
 
 00000400 <vprintf.constprop.0>:
+static void vprintf(int fd, const char *fmt, va_list ap)
  400:	55                   	push   %ebp
  401:	89 e5                	mov    %esp,%ebp
  403:	57                   	push   %edi
@@ -661,15 +696,26 @@ SYSCALL(cpuhalt)
  405:	53                   	push   %ebx
  406:	89 d6                	mov    %edx,%esi
  408:	83 ec 2c             	sub    $0x2c,%esp
+{
+  char *s;
+  int c, i, state;
+
+  state = 0;
+  for(i = 0; fmt[i]; i++){
  40b:	0f b6 10             	movzbl (%eax),%edx
  40e:	84 d2                	test   %dl,%dl
  410:	0f 84 cd 00 00 00    	je     4e3 <vprintf.constprop.0+0xe3>
  416:	8d 58 01             	lea    0x1(%eax),%ebx
+  state = 0;
  419:	31 ff                	xor    %edi,%edi
  41b:	eb 31                	jmp    44e <vprintf.constprop.0+0x4e>
  41d:	8d 76 00             	lea    0x0(%esi),%esi
+    c = fmt[i] & 0xff;
+    if(state == 0){
+      if(c == '%'){
  420:	83 f8 25             	cmp    $0x25,%eax
  423:	0f 84 c7 00 00 00    	je     4f0 <vprintf.constprop.0+0xf0>
+  write(fd, &c, 1);
  429:	8d 45 e4             	lea    -0x1c(%ebp),%eax
  42c:	83 ec 04             	sub    $0x4,%esp
  42f:	88 55 e4             	mov    %dl,-0x1c(%ebp)
@@ -679,30 +725,58 @@ SYSCALL(cpuhalt)
  437:	e8 9e fe ff ff       	call   2da <write>
  43c:	83 c4 10             	add    $0x10,%esp
  43f:	83 c3 01             	add    $0x1,%ebx
+  for(i = 0; fmt[i]; i++){
  442:	0f b6 53 ff          	movzbl -0x1(%ebx),%edx
  446:	84 d2                	test   %dl,%dl
  448:	0f 84 95 00 00 00    	je     4e3 <vprintf.constprop.0+0xe3>
+    if(state == 0){
  44e:	85 ff                	test   %edi,%edi
+    c = fmt[i] & 0xff;
  450:	0f b6 c2             	movzbl %dl,%eax
+    if(state == 0){
  453:	74 cb                	je     420 <vprintf.constprop.0+0x20>
+        state = '%';
+      } else {
+        putc(fd, c);
+      }
+    } else if(state == '%'){
  455:	83 ff 25             	cmp    $0x25,%edi
  458:	75 e5                	jne    43f <vprintf.constprop.0+0x3f>
+      if(c == 'd'){
  45a:	83 f8 64             	cmp    $0x64,%eax
+        printint(fd, va_arg(ap, int), 10, 1);
  45d:	8d 7e 04             	lea    0x4(%esi),%edi
  460:	b9 01 00 00 00       	mov    $0x1,%ecx
+      if(c == 'd'){
  465:	0f 84 9a 00 00 00    	je     505 <vprintf.constprop.0+0x105>
+      } else if(c == 'l') {
  46b:	83 f8 6c             	cmp    $0x6c,%eax
  46e:	0f 84 8c 00 00 00    	je     500 <vprintf.constprop.0+0x100>
+        printint(fd, va_arg(ap, uint), 10, 0);
+      } else if(c == 'x') {
  474:	83 f8 78             	cmp    $0x78,%eax
  477:	0f 84 a3 00 00 00    	je     520 <vprintf.constprop.0+0x120>
+        printint(fd, va_arg(ap, int), 16, 0);
+      } else if(c == 'p') {
  47d:	83 f8 70             	cmp    $0x70,%eax
  480:	0f 84 ca 00 00 00    	je     550 <vprintf.constprop.0+0x150>
+        printptr(fd, va_arg(ap, uint));
+      } else if(c == 's'){
  486:	83 f8 73             	cmp    $0x73,%eax
  489:	0f 84 39 01 00 00    	je     5c8 <vprintf.constprop.0+0x1c8>
+          s = "(null)";
+        while(*s != 0){
+          putc(fd, *s);
+          s++;
+        }
+      } else if(c == 'c'){
  48f:	83 f8 63             	cmp    $0x63,%eax
  492:	0f 84 68 01 00 00    	je     600 <vprintf.constprop.0+0x200>
+        putc(fd, va_arg(ap, uint));
+      } else if(c == '%'){
  498:	83 f8 25             	cmp    $0x25,%eax
  49b:	0f 84 9f 00 00 00    	je     540 <vprintf.constprop.0+0x140>
+  write(fd, &c, 1);
  4a1:	8d 45 df             	lea    -0x21(%ebp),%eax
  4a4:	83 ec 04             	sub    $0x4,%esp
  4a7:	88 55 d4             	mov    %dl,-0x2c(%ebp)
@@ -719,12 +793,25 @@ SYSCALL(cpuhalt)
  4c7:	50                   	push   %eax
  4c8:	6a 01                	push   $0x1
  4ca:	83 c3 01             	add    $0x1,%ebx
+      } else {
+        // Unknown % sequence.  Print it to draw attention.
+        putc(fd, '%');
+        putc(fd, c);
+      }
+      state = 0;
  4cd:	31 ff                	xor    %edi,%edi
+  write(fd, &c, 1);
  4cf:	e8 06 fe ff ff       	call   2da <write>
+  for(i = 0; fmt[i]; i++){
  4d4:	0f b6 53 ff          	movzbl -0x1(%ebx),%edx
+  write(fd, &c, 1);
  4d8:	83 c4 10             	add    $0x10,%esp
+  for(i = 0; fmt[i]; i++){
  4db:	84 d2                	test   %dl,%dl
  4dd:	0f 85 6b ff ff ff    	jne    44e <vprintf.constprop.0+0x4e>
+    }
+  }
+}
  4e3:	8d 65 f4             	lea    -0xc(%ebp),%esp
  4e6:	5b                   	pop    %ebx
  4e7:	5e                   	pop    %esi
@@ -733,39 +820,53 @@ SYSCALL(cpuhalt)
  4ea:	c3                   	ret    
  4eb:	90                   	nop
  4ec:	8d 74 26 00          	lea    0x0(%esi,%eiz,1),%esi
+        state = '%';
  4f0:	bf 25 00 00 00       	mov    $0x25,%edi
  4f5:	e9 45 ff ff ff       	jmp    43f <vprintf.constprop.0+0x3f>
  4fa:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
+        printint(fd, va_arg(ap, uint), 10, 0);
  500:	8d 7e 04             	lea    0x4(%esi),%edi
  503:	31 c9                	xor    %ecx,%ecx
  505:	8b 06                	mov    (%esi),%eax
  507:	ba 0a 00 00 00       	mov    $0xa,%edx
  50c:	89 fe                	mov    %edi,%esi
+      state = 0;
  50e:	31 ff                	xor    %edi,%edi
+        printint(fd, va_arg(ap, uint), 10, 0);
  510:	e8 5b fe ff ff       	call   370 <printint.constprop.1>
  515:	e9 25 ff ff ff       	jmp    43f <vprintf.constprop.0+0x3f>
  51a:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
+        printint(fd, va_arg(ap, int), 16, 0);
  520:	8b 06                	mov    (%esi),%eax
  522:	8d 7e 04             	lea    0x4(%esi),%edi
  525:	31 c9                	xor    %ecx,%ecx
  527:	ba 10 00 00 00       	mov    $0x10,%edx
  52c:	89 fe                	mov    %edi,%esi
+      state = 0;
  52e:	31 ff                	xor    %edi,%edi
+        printint(fd, va_arg(ap, int), 16, 0);
  530:	e8 3b fe ff ff       	call   370 <printint.constprop.1>
  535:	e9 05 ff ff ff       	jmp    43f <vprintf.constprop.0+0x3f>
  53a:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
+  write(fd, &c, 1);
  540:	83 ec 04             	sub    $0x4,%esp
  543:	88 55 e1             	mov    %dl,-0x1f(%ebp)
  546:	8d 45 e1             	lea    -0x1f(%ebp),%eax
  549:	6a 01                	push   $0x1
  54b:	e9 77 ff ff ff       	jmp    4c7 <vprintf.constprop.0+0xc7>
+        printptr(fd, va_arg(ap, uint));
  550:	8d 46 04             	lea    0x4(%esi),%eax
+  write(fd, &c, 1);
  553:	83 ec 04             	sub    $0x4,%esp
+        printptr(fd, va_arg(ap, uint));
  556:	8b 3e                	mov    (%esi),%edi
+  write(fd, &c, 1);
  558:	6a 01                	push   $0x1
  55a:	c6 45 e6 30          	movb   $0x30,-0x1a(%ebp)
  55e:	be 08 00 00 00       	mov    $0x8,%esi
+        printptr(fd, va_arg(ap, uint));
  563:	89 45 d4             	mov    %eax,-0x2c(%ebp)
+  write(fd, &c, 1);
  566:	8d 45 e6             	lea    -0x1a(%ebp),%eax
  569:	50                   	push   %eax
  56a:	6a 01                	push   $0x1
@@ -780,10 +881,15 @@ SYSCALL(cpuhalt)
  585:	83 c4 10             	add    $0x10,%esp
  588:	90                   	nop
  589:	8d b4 26 00 00 00 00 	lea    0x0(%esi,%eiz,1),%esi
+    putc(fd, digits[x >> (sizeof(uint) * 8 - 4)]);
  590:	89 f8                	mov    %edi,%eax
+  write(fd, &c, 1);
  592:	83 ec 04             	sub    $0x4,%esp
+  for (i = 0; i < (sizeof(uint) * 2); i++, x <<= 4)
  595:	c1 e7 04             	shl    $0x4,%edi
+    putc(fd, digits[x >> (sizeof(uint) * 8 - 4)]);
  598:	c1 e8 1c             	shr    $0x1c,%eax
+  write(fd, &c, 1);
  59b:	6a 01                	push   $0x1
  59d:	0f b6 80 14 08 00 00 	movzbl 0x814(%eax),%eax
  5a4:	88 45 e5             	mov    %al,-0x1b(%ebp)
@@ -791,72 +897,107 @@ SYSCALL(cpuhalt)
  5aa:	50                   	push   %eax
  5ab:	6a 01                	push   $0x1
  5ad:	e8 28 fd ff ff       	call   2da <write>
+  for (i = 0; i < (sizeof(uint) * 2); i++, x <<= 4)
  5b2:	83 c4 10             	add    $0x10,%esp
  5b5:	83 ee 01             	sub    $0x1,%esi
  5b8:	75 d6                	jne    590 <vprintf.constprop.0+0x190>
+        s = va_arg(ap, char*);
  5ba:	8b 75 d4             	mov    -0x2c(%ebp),%esi
+      state = 0;
  5bd:	31 ff                	xor    %edi,%edi
  5bf:	e9 7b fe ff ff       	jmp    43f <vprintf.constprop.0+0x3f>
  5c4:	8d 74 26 00          	lea    0x0(%esi,%eiz,1),%esi
+        s = va_arg(ap, char*);
  5c8:	8b 3e                	mov    (%esi),%edi
  5ca:	8d 46 04             	lea    0x4(%esi),%eax
  5cd:	89 45 d4             	mov    %eax,-0x2c(%ebp)
+        if(s == 0)
  5d0:	85 ff                	test   %edi,%edi
  5d2:	74 50                	je     624 <vprintf.constprop.0+0x224>
+        while(*s != 0){
  5d4:	0f b6 07             	movzbl (%edi),%eax
  5d7:	84 c0                	test   %al,%al
  5d9:	74 df                	je     5ba <vprintf.constprop.0+0x1ba>
  5db:	8d 75 e3             	lea    -0x1d(%ebp),%esi
  5de:	66 90                	xchg   %ax,%ax
+  write(fd, &c, 1);
  5e0:	83 ec 04             	sub    $0x4,%esp
+          s++;
  5e3:	83 c7 01             	add    $0x1,%edi
  5e6:	88 45 e3             	mov    %al,-0x1d(%ebp)
+  write(fd, &c, 1);
  5e9:	6a 01                	push   $0x1
  5eb:	56                   	push   %esi
  5ec:	6a 01                	push   $0x1
  5ee:	e8 e7 fc ff ff       	call   2da <write>
+        while(*s != 0){
  5f3:	0f b6 07             	movzbl (%edi),%eax
  5f6:	83 c4 10             	add    $0x10,%esp
  5f9:	84 c0                	test   %al,%al
  5fb:	75 e3                	jne    5e0 <vprintf.constprop.0+0x1e0>
  5fd:	eb bb                	jmp    5ba <vprintf.constprop.0+0x1ba>
  5ff:	90                   	nop
+        putc(fd, va_arg(ap, uint));
  600:	8b 06                	mov    (%esi),%eax
+  write(fd, &c, 1);
  602:	83 ec 04             	sub    $0x4,%esp
+        putc(fd, va_arg(ap, uint));
  605:	8d 7e 04             	lea    0x4(%esi),%edi
+  write(fd, &c, 1);
  608:	6a 01                	push   $0x1
+        putc(fd, va_arg(ap, uint));
  60a:	89 fe                	mov    %edi,%esi
+      state = 0;
  60c:	31 ff                	xor    %edi,%edi
+        putc(fd, va_arg(ap, uint));
  60e:	88 45 e2             	mov    %al,-0x1e(%ebp)
+  write(fd, &c, 1);
  611:	8d 45 e2             	lea    -0x1e(%ebp),%eax
  614:	50                   	push   %eax
  615:	6a 01                	push   $0x1
  617:	e8 be fc ff ff       	call   2da <write>
  61c:	83 c4 10             	add    $0x10,%esp
  61f:	e9 1b fe ff ff       	jmp    43f <vprintf.constprop.0+0x3f>
+          s = "(null)";
  624:	bf 0c 08 00 00       	mov    $0x80c,%edi
+        while(*s != 0){
  629:	b8 28 00 00 00       	mov    $0x28,%eax
  62e:	eb ab                	jmp    5db <vprintf.constprop.0+0x1db>
 
 00000630 <fprintf>:
+// Print to the given fd. Only understands %d,%x, %p, %s, %c.
+void
+fprintf(int fd, const char *fmt, ...)
+{
  630:	55                   	push   %ebp
  631:	89 e5                	mov    %esp,%ebp
  633:	83 ec 08             	sub    $0x8,%esp
+ va_list ap;
+ va_start(ap, fmt); 
+ vprintf(1,fmt,ap);
  636:	8b 45 0c             	mov    0xc(%ebp),%eax
  639:	8d 55 10             	lea    0x10(%ebp),%edx
  63c:	e8 bf fd ff ff       	call   400 <vprintf.constprop.0>
+}
  641:	c9                   	leave  
  642:	c3                   	ret    
  643:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
  649:	8d bc 27 00 00 00 00 	lea    0x0(%edi,%eiz,1),%edi
 
 00000650 <printf>:
+void
+printf(const char *fmt, ...)
+{
  650:	55                   	push   %ebp
  651:	89 e5                	mov    %esp,%ebp
  653:	83 ec 08             	sub    $0x8,%esp
+  va_list ap;
+  va_start(ap, fmt); 
+  vprintf(1,fmt,ap);
  656:	8b 45 08             	mov    0x8(%ebp),%eax
  659:	8d 55 0c             	lea    0xc(%ebp),%edx
  65c:	e8 9f fd ff ff       	call   400 <vprintf.constprop.0>
+}
  661:	c9                   	leave  
  662:	c3                   	ret    
  663:	66 90                	xchg   %ax,%ax

@@ -1,17 +1,7 @@
 #include "LinkedList.h"
+// #include "helpers.h"
 #define nullptr 0
-
-char* safestrcpy(char *s, const char *t, int n) {
-  char *os;
-
-  os = s;
-  if(n <= 0)
-    return os;
-  while(--n > 0 && (*s++ = *t++) != 0)
-    ;
-  *s = 0;
-  return os;
-}
+// prototypes
 
 Node* nullNode(char* data) {
   struct Node* node = malloc(sizeof(Node));

@@ -14,7 +14,7 @@
 00000000 ulib.c
 00000000 printf.c
 00000390 printint.constprop.1
-00000854 digits.1053
+00000854 digits.1055
 00000420 vprintf.constprop.0
 00000854 digits
 00000000 umalloc.c

@@ -1,8 +1,9 @@
 #include "kernel/types.h"
 #include "kernel/fcntl.h"
 #include "user/user.h"
-#include "LinkedList.c"
 #include "helpers.c"
+#include "LinkedList.c"
+#include "textEditHelpers.c"
 
 enum { END, ADD, DROP, EDIT, LIST, SHOW, QUIT, BI };
 

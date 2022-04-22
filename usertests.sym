@@ -12,11 +12,11 @@
 00000000 .debug_loc
 00000000 .debug_ranges
 00000000 usertests.c
-00005c60 args.1406
+00005c60 args.1408
 00000000 ulib.c
 00000000 printf.c
 000036c0 printint.constprop.1
-000052e8 digits.1053
+000052e8 digits.1055
 00003750 vprintf.constprop.0
 000052e8 digits
 00000000 umalloc.c

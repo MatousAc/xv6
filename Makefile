@@ -189,7 +189,6 @@ UPROGS=\
 	$U/_usertests\
 	$U/_wc\
 	$U/_zombie\
-	$U/_greet\
 	$U/_cp\
 	$U/_mv\
 	$U/_motd\
