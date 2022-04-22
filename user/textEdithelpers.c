@@ -124,7 +124,6 @@ void gatherLinesSized(struct File* file, Terminal terminal) {
   // return ;
 }
 
-
 // syntactic sugar
 Node* lineAt(struct LinkedList* list, int pos) {
   return nodeAt(list, pos-1);

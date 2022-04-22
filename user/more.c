@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 	
   // objects we will pass around
   Terminal terminal;
-  terminal.width = 55;
+  terminal.width = 80;
   terminal.height = 25;
   struct File file;
   file.len = 0;
