@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 	
   // objects we will pass around
   Terminal terminal;
-  terminal.width = 80;
+  terminal.width = 55;
   terminal.height = 25;
   struct File file;
   file.len = 0;
@@ -151,10 +151,10 @@ void printPrompt(File file) {
 void showPage(File file, Terminal terminal) {
   struct Node* curNode = lineAt(file.lines, LINE_ON_TOP);
   int termLine = 0; // num lines we've written to the terminal so far
-  int firstLine = 1;
+  int firstLine = 0;
   while (termLine < TERMH_ADJ) {
     if (firstLine) {
-      firstLine = 0;
+      firstLine = 0; // FIXME!
       printpad(terminal.width, ' ', curNode->data, LEFT, 1);
     } else printf("%s\n", curNode->data);
     curNode = curNode->next;
@@ -167,10 +167,10 @@ void showPage(File file, Terminal terminal) {
 void showLines(File file, Terminal terminal, int numLines) {
   // get the node after our current one
   struct Node* curNode = (lineAt(file.lines, file.curLine))->next;
-  int firstLine = 1;
+  int firstLine = 0;
   while (numLines-- > 0) {
     if (firstLine) {
-      firstLine = 0;
+      firstLine = 0; // FIXME!
       printpad(terminal.width, ' ', curNode->data, LEFT, 1);
     } else printf("%s\n", curNode->data);
     curNode = curNode->next;
