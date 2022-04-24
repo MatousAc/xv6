@@ -5,49 +5,70 @@
 #include "LinkedList.c"
 #include "textEditHelpers.c"
 // adjusted terminal height (accounts for "MORE" @ bottom)
-#define TERMH_ADJ (terminal.height - 1)
-#define LINE_ON_TOP ((file.curLine - TERMH_ADJ) + 1)
-// prototypes - editors
-void end(struct File* file, char* args);
-void add(struct File* file, char* args);
-void drop(struct File* file, char* args);
-void edit(struct File* file, char* args);
-void list(struct File file, char* args);
-// pagers
-void printPrompt(File file, Terminal terminal);
-void showPage(File file, Terminal terminal);
-void showLines(File file, Terminal terminal, int numLines);
+#define TermHeight (terminal.height - 1)
+#define TopLine ((file.curLine - TermHeight) + 1)
+
+// protptypes
 void forward(struct File* file, Terminal terminal);
 void skip(struct File* file, Terminal terminal, int numPages);
 void back(struct File* file, Terminal terminal, int numPages);
 void scroll(struct File* file, Terminal terminal, int numLines);
 void line(File file, Terminal terminal);
 void help(Terminal terminal);
+// helpers
+void printPrompt(File file, Terminal terminal);
+void showPage(File file, Terminal terminal);
+void showLines(File file, Terminal terminal, int numLines);
 static int collectNum(char c, int* numCollector);
 static char getCmd();
 
+static void moreVersion();
+static void moreBI();
+static void more2Much();
+static void moreHelp(Terminal terminal);
+
 int main(int argc, char* argv[]) {
-  // arg czeching
-  if (argc < 2) {
-    fprintf(2, "more: bad usage\nTry 'more --help' for more information.\n");
-    exit();
-  } else if (argc > 2) {
-    fprintf(2, "this version of more only supports one file at a time.\n");
-    exit();
-  }
-	
-  // objects we will pass around
+  // terminal object
   Terminal terminal;
   terminal.width = 55;
   terminal.height = 25;
-  terminal.d = 1;
+  terminal.d = 0;
+
+  char* filename;
+  // arg czeching
+  if (argc == 1) // more
+    moreBI(); // bad input
+  else if (argc > 3) // too many args
+    more2Much(); // no 3+ file support
+  // more -h, more -d README
+  else if (argv[1][0] == '-')
+    switch (argv[1][1]) {
+    case 'D':
+    case 'd': 
+      if (argc != 3) moreBI();
+      terminal.d = 1; 
+      filename = argv[2]; break;
+    case 'H':
+    case 'h': moreHelp(terminal);
+    case 'V':
+    case 'v': moreVersion();
+    default: 
+      fprintf(2, "unrecognized flag %s\n", argv[1]); 
+      exit();
+    }
+  else if (argc > 2) // more README dr.ac
+    more2Much();
+  else { // more README
+    filename = argv[1];
+  }
+	
+  // file object
   struct File file;
   file.len = 0;
   file.edited = 0;
-  file.curLine = TERMH_ADJ; // line displayed at bottom
-  file.filename = argv[1];
+  file.curLine = TermHeight; // line displayed at bottom
+  file.filename = filename;
   file.lines = MakeLinkedList();
-
   // opening file
   file.fd = open(file.filename, O_RDONLY);
   if (file.fd == -1) {
@@ -94,27 +115,27 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
-// commands
+// basic commands
 void forward(struct File* file, Terminal terminal){
-  file->curLine += TERMH_ADJ; // forward 1 page
+  file->curLine += TermHeight; // forward 1 page
   // don't go past end of file
   if (file->curLine > file->len) file->curLine = file->len;
   showPage(*file, terminal);
 }
 void skip(struct File* file, Terminal terminal, int numPages){
-  file->curLine += (numPages * TERMH_ADJ); // forward x pages
+  file->curLine += (numPages * TermHeight); // forward x pages
   // don't go past end of file
   if (file->curLine > file->len) file->curLine = file->len;
-  char* msg = "...skipping";
-  printpad(terminal.width, ' ', msg, LEFT, 1);
+  eraseLine(terminal.width);
+  printf("...skipping %d page%s\n", numPages, (numPages > 1) ? "s" : "");
   showPage(*file, terminal);
 }
 void back(struct File* file, Terminal terminal, int numPages){
-  file->curLine -= (numPages * TERMH_ADJ); // back x pages
+  file->curLine -= (numPages * TermHeight); // back x pages
   // don't go past beginning of file
-  if (file->curLine < TERMH_ADJ) file->curLine = TERMH_ADJ;
-  char* msg = "...back pages";
-  printpad(terminal.width, ' ', msg, LEFT, 1);
+  if (file->curLine < TermHeight) file->curLine = TermHeight;
+  eraseLine(terminal.width);
+  printf("...back %d page%s\n", numPages, (numPages > 1) ? "s" : "");
   showPage(*file, terminal);
 }
 void scroll(struct File* file, Terminal terminal, int numLines){
@@ -131,7 +152,7 @@ void help(Terminal terminal) {
   printpad(terminal.width, '-', "-", LEFT, 1);
   printf("Command       Description [Def Parameter]\n");
   printf("<space>       Display next page\n");
-  printf("<int> \n,s,S  Scroll down <int> lines [1]\n");
+  printf("<int> \\n,s,S  Scroll down <int> lines [1]\n");
   printf("<int> b,B     Skip back <int> pages [1]\n");
   printf("<int> f,F     Skip forward <int> pages [1]\n");
   printf("=             Display current line number\n");
@@ -144,17 +165,11 @@ void help(Terminal terminal) {
 }
 
 // help
-void printPrompt(File file, Terminal terminal) {
-  printf("--MORE--(%d%%)", 100 * file.curLine / file.len);
-  if (terminal.d) printf("[Press space to continue, 'q' to quit.]");
-  printf("\r");
-}
-
 void showPage(File file, Terminal terminal) {
-  struct Node* curNode = lineAt(file.lines, LINE_ON_TOP);
+  struct Node* curNode = lineAt(file.lines, TopLine);
   int termLine = 0; // num lines we've written to the terminal so far
   int firstLine = 1;
-  while (termLine < TERMH_ADJ) {
+  while (termLine < TermHeight) {
     if (firstLine) {
       firstLine = 0;
       eraseLine(terminal.width);
@@ -199,3 +214,42 @@ static char getCmd() {
   printf("\r");
   return cmd;
 }
+
+static void moreBI() {
+  fprintf(2, "more: bad usage\nTry 'more -h' for more information.\n");
+  exit();
+}
+
+static void more2Much() {
+  fprintf(2, "this version of more only ");
+  fprintf(2, "supports one file at a time.\n");
+  exit();
+}
+
+static void moreHelp(Terminal terminal) {
+  printpad(terminal.width, '-', "-", LEFT, 1);
+  printf("\nUsage:\n");
+  printf(" more [options] <file>...\n");
+  printf("A file perusal filter for CRT viewing.\n");
+  printf("Options:\n");
+  printf(" -F, -d   display command explanation\n");
+  // printf(" -f          count logical rather than screen lines\n");
+  // printf(" -s          squeeze multiple blank lines into one\n");
+  // printf(" -<number>   the number of lines per screenful\n");
+  // printf(" +<number>   display file beginning from line number\n");
+  printf(" -H, -h   display this help\n");
+  printf(" -V, -v   display version\n");
+  printpad(terminal.width, '-', "-", LEFT, 1);
+  exit();
+}
+void printPrompt(File file, Terminal terminal) {
+  printf("--MORE--(%d%%)", 100 * file.curLine / file.len);
+  if (terminal.d) printf("[Press space to continue, 'q' to quit.]");
+  printf("\r");
+}
+
+static void moreVersion() {
+  printf("more from MatousAc-xv6 0.1.0\n");
+  exit();
+}
+

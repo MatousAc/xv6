@@ -3,4 +3,5 @@
 *.o
 *.d
 *.out
+*.img
 user/_*
