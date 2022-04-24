@@ -137,6 +137,13 @@ void printl(int lineNum, char* line) {
     fprintf(2, "%d: %s\n", lineNum, line);
 }
 
+void eraseLine(int lineWidth) {
+  printf("\r");
+  for (int i = lineWidth; i > 0; i--)
+    printf(" ");
+  printf("\r");
+}
+
 // prints the string with padding of a certain character
 void printpad(int pad, char padChar, char* str, int alignment, int endLine) {
   int len = strlen(str);

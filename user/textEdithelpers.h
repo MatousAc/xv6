@@ -13,6 +13,7 @@ typedef struct File {
 typedef struct {
   int width;
   int height;
+  int d; // show directions?
 } Terminal;
 
 typedef enum {
@@ -47,3 +48,7 @@ void gatherLineSized(struct File* file, Terminal terminal);
 Node* lineAt(struct LinkedList* list, int pos);
 // helps me print for LIST and SHOW
 void printl(int lineNum, char* line);
+// erases currentline
+void eraseLine(int lineWidth);
+// prints a string with padding
+void printpad(int pad, char padChar, char* str, int alignment, int endLine);

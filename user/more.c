@@ -14,7 +14,7 @@ void drop(struct File* file, char* args);
 void edit(struct File* file, char* args);
 void list(struct File file, char* args);
 // pagers
-void printPrompt(File file);
+void printPrompt(File file, Terminal terminal);
 void showPage(File file, Terminal terminal);
 void showLines(File file, Terminal terminal, int numLines);
 void forward(struct File* file, Terminal terminal);
@@ -40,6 +40,7 @@ int main(int argc, char* argv[]) {
   Terminal terminal;
   terminal.width = 55;
   terminal.height = 25;
+  terminal.d = 1;
   struct File file;
   file.len = 0;
   file.edited = 0;
@@ -76,11 +77,11 @@ int main(int argc, char* argv[]) {
     case 'B': back(&file, terminal, numArg); break;
 		case 's':
 		case 'S':
-		case 'e':
-		case 'E': scroll(&file, terminal, numArg); break;
+		case '\n': scroll(&file, terminal, numArg); break;
 		case '=': line(file, terminal); break;
     case 'h':
-    case 'H': help(terminal); printPrompt(file); break;
+    case 'H': help(terminal); 
+              printPrompt(file, terminal); break;
     case 'l':
     case 'L': showPage(file, terminal); break;
 		default : break;
@@ -105,7 +106,7 @@ void skip(struct File* file, Terminal terminal, int numPages){
   // don't go past end of file
   if (file->curLine > file->len) file->curLine = file->len;
   char* msg = "...skipping";
-  printpad(terminal.width, ' ', msg, LEFT, 0);
+  printpad(terminal.width, ' ', msg, LEFT, 1);
   showPage(*file, terminal);
 }
 void back(struct File* file, Terminal terminal, int numPages){
@@ -113,7 +114,7 @@ void back(struct File* file, Terminal terminal, int numPages){
   // don't go past beginning of file
   if (file->curLine < TERMH_ADJ) file->curLine = TERMH_ADJ;
   char* msg = "...back pages";
-  printpad(terminal.width, ' ', msg, LEFT, 0);
+  printpad(terminal.width, ' ', msg, LEFT, 1);
   showPage(*file, terminal);
 }
 void scroll(struct File* file, Terminal terminal, int numLines){
@@ -130,12 +131,12 @@ void help(Terminal terminal) {
   printpad(terminal.width, '-', "-", LEFT, 1);
   printf("Command       Description [Def Parameter]\n");
   printf("<space>       Display next page\n");
-  printf("<int> e,E,s,S Display next <int> lines [1]\n");
-  printf("<int> b,B     Skip back <int> screens [1]\n");
-  printf("<int> f,F     Skip forward <int> screens [1]\n");
+  printf("<int> \n,s,S  Scroll down <int> lines [1]\n");
+  printf("<int> b,B     Skip back <int> pages [1]\n");
+  printf("<int> f,F     Skip forward <int> pages [1]\n");
   printf("=             Display current line number\n");
   printf(".             Repeat previous command\n");
-  printf("l or L        Redraw screen\n");
+  printf("l or L        Redraw page\n");
   printf("q or Q        Exit from more\n");
   // printf("d or ctrl-D   Scroll k lines [current scroll size, initially 11]*\n");
   // printf("v             Start up /usr/bin/vi at current line\n");
@@ -143,40 +144,43 @@ void help(Terminal terminal) {
 }
 
 // help
-void printPrompt(File file) {
+void printPrompt(File file, Terminal terminal) {
   printf("--MORE--(%d%%)", 100 * file.curLine / file.len);
-  printf("[Press space to continue, 'q' to quit.]\r");
+  if (terminal.d) printf("[Press space to continue, 'q' to quit.]");
+  printf("\r");
 }
 
 void showPage(File file, Terminal terminal) {
   struct Node* curNode = lineAt(file.lines, LINE_ON_TOP);
   int termLine = 0; // num lines we've written to the terminal so far
-  int firstLine = 0;
+  int firstLine = 1;
   while (termLine < TERMH_ADJ) {
     if (firstLine) {
-      firstLine = 0; // FIXME!
-      printpad(terminal.width, ' ', curNode->data, LEFT, 1);
-    } else printf("%s\n", curNode->data);
+      firstLine = 0;
+      eraseLine(terminal.width);
+    }
+    printf("%s\n", curNode->data);
     curNode = curNode->next;
     termLine++;
     if (curNode == file.lines->tail) exit();
   }
-  printPrompt(file);
+  printPrompt(file, terminal);
 }
 
 void showLines(File file, Terminal terminal, int numLines) {
   // get the node after our current one
   struct Node* curNode = (lineAt(file.lines, file.curLine))->next;
-  int firstLine = 0;
+  int firstLine = 1;
   while (numLines-- > 0) {
     if (firstLine) {
-      firstLine = 0; // FIXME!
-      printpad(terminal.width, ' ', curNode->data, LEFT, 1);
-    } else printf("%s\n", curNode->data);
+      firstLine = 0;
+      eraseLine(terminal.width);
+    }
+    printf("%s\n", curNode->data);
     curNode = curNode->next;
     if (curNode == file.lines->tail) exit();
   }
-  printPrompt(file);
+  printPrompt(file, terminal);
 }
 
 static int collectNum(char c, int* numCollector) {
