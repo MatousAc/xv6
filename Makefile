@@ -199,8 +199,8 @@ UPROGS=\
 	$U/_shutdown
 
 
-fs.img: $M/mkfs README $(UPROGS)
-	$M/mkfs fs.img README $(UPROGS)
+fs.img: $M/mkfs README TwoCities.txt $(UPROGS)
+	$M/mkfs fs.img README TwoCities.txt $(UPROGS)
 
 -include *.d
 
@@ -214,7 +214,7 @@ clean:
 
 # make a printout
 FILES = $(shell grep -v '^\#' runoff.list)
-PRINT = runoff.list runoff.spec README toc.hdr toc.ftr $(FILES)
+PRINT = runoff.list runoff.spec README TwoCities.txt toc.hdr toc.ftr $(FILES)
 
 xv6.pdf: $(PRINT)
 	./runoff
@@ -269,7 +269,7 @@ EXTRA=\
 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c zombie.c\
 	printf.c umalloc.c\
-	README dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
+	README TwoCities.txt dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 
 dist:

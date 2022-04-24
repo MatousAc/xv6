@@ -28,10 +28,10 @@ static void more2Much();
 static void moreHelp(Terminal terminal);
 
 int main(int argc, char* argv[]) {
-  // terminal object
+  // terminal is 117 x 31 by default
   Terminal terminal;
-  terminal.width = 55;
-  terminal.height = 25;
+  terminal.width = 117;
+  terminal.height = 31;
   terminal.d = 0;
 
   char* filename;
@@ -92,6 +92,7 @@ int main(int argc, char* argv[]) {
     else previous = cmd;
 		switch (cmd) {
 		case ' ': forward(&file, terminal); break;
+		case '=': line(file, terminal); break;
     case 'f':
     case 'F': skip(&file, terminal, numArg); break;
 		case 'b':
@@ -99,7 +100,6 @@ int main(int argc, char* argv[]) {
 		case 's':
 		case 'S':
 		case '\n': scroll(&file, terminal, numArg); break;
-		case '=': line(file, terminal); break;
     case 'h':
     case 'H': help(terminal); 
               printPrompt(file, terminal); break;
@@ -159,7 +159,6 @@ void help(Terminal terminal) {
   printf(".             Repeat previous command\n");
   printf("l or L        Redraw page\n");
   printf("q or Q        Exit from more\n");
-  // printf("d or ctrl-D   Scroll k lines [current scroll size, initially 11]*\n");
   // printf("v             Start up /usr/bin/vi at current line\n");
   printpad(terminal.width, '-', "-", LEFT, 1);
 }
@@ -232,7 +231,7 @@ static void moreHelp(Terminal terminal) {
   printf(" more [options] <file>...\n");
   printf("A file perusal filter for CRT viewing.\n");
   printf("Options:\n");
-  printf(" -F, -d   display command explanation\n");
+  printf(" -D, -d   display command explanation\n");
   // printf(" -f          count logical rather than screen lines\n");
   // printf(" -s          squeeze multiple blank lines into one\n");
   // printf(" -<number>   the number of lines per screenful\n");

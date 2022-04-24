@@ -43,3 +43,6 @@ You have to edit,
 * file.h
 * console.c
 
+### Adding a file
+* Add reqs in Makefile
+* Add copy statements in runoff
