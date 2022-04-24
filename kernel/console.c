@@ -188,8 +188,8 @@ struct {
 
 #define C(x)  ((x)-'@')  // Control-x
 // this
-int singleCharMode = 0;
 
+int consumeCharMode = 0;
 void
 consoleintr(int (*getc)(void))
 {
@@ -219,12 +219,12 @@ consoleintr(int (*getc)(void))
       if(c != 0 && input.e-input.r < INPUT_BUF){
         c = (c == '\r') ? '\n' : c;
         input.buf[input.e++ % INPUT_BUF] = c;
-        consputc(c);
+        if (!consumeCharMode) consputc(c);
         if(c == '\n' || c == C('D') || input.e == input.r+INPUT_BUF){
           input.w = input.e;
           wakeup(&input.r);
         } // for getting a single character from the console:
-        else if(singleCharMode && c > 0) {
+        else if(consumeCharMode && c > 0) {
           input.w = input.e;
           wakeup(&input.r);
         }
@@ -280,7 +280,7 @@ consoleread(struct inode *ip, char *dst, int n)
 int
 consolesteal(struct inode *ip)
 {
-  singleCharMode = 1;
+  consumeCharMode = 1;
   int c = 1;
   iunlock(ip);
   acquire(&cons.lock);
@@ -290,9 +290,9 @@ consolesteal(struct inode *ip)
       ilock(ip);
       return -1;
     }
-    singleCharMode = 1;
+    consumeCharMode = 1;
     sleep(&input.r, &cons.lock);
-    singleCharMode = 0;
+    consumeCharMode = 0;
   }
   c = input.buf[input.r++ % INPUT_BUF];
   release(&cons.lock);
