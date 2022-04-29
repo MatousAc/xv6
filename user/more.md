@@ -1,6 +1,6 @@
 ## More
 ***
-### What I am Promising to Do
+### What I am Promising to Do - proposal
 I will be adding a command-line utility called **more**.  
 This is what is known as a "terminal pager." The basic Idea behind more is that you should be able to go back and forth within a file (usually a text file) by pages or by line. The pages should be based on the size of the terminal window.  
 This is clearly connected to the course as it is a basic command-line utility that is built into most Operating Systems such as Linux, but it is not yet available in xv6.  
@@ -46,3 +46,29 @@ You have to edit,
 ### Adding a file
 * Add reqs in Makefile
 * Add copy statements in runoff
+
+### What I Did - Presentation
+* Topic Definition  
+	* My version of more is @ https://github.com/MatousAc/xv6
+	* Show WSL version of more  
+	* I decided to implement
+		1. paging (*space*)
+		2. going back one page (*b*)
+		3. scroll down one line (*enter*)
+		4. displaying line number (*=*)
+* How I did it:
+	* The program
+		* more.c
+		* xvEdit
+		* getting a single character of input is hard
+	* adding a syscall in xv6
+		* come up with the functionality you want
+			* file.c
+			* fs.c
+			* file.h
+			* console.c
+		* to add syscall, edit
+			* user.h
+			* syscall.c
+			* sysfile.c
+			* usys.S
